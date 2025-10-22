@@ -1,5 +1,5 @@
-"""Terminal User Interface components"""
+"""TUI package - CLI menu interface"""
 
-from .app import TrackerTUI
+from .app import run_tui
 
-__all__ = ["TrackerTUI"]
+__all__ = ["run_tui"]

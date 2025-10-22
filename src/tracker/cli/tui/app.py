@@ -1,179 +1,210 @@
-"""Main TUI application using Textual"""
+"""CLI menu application - text-based interactive loop"""
 
-from textual.app import App, ComposeResult
-from textual.containers import Container, Vertical
-from textual.widgets import Header, Footer, Button, Static
-from textual.binding import Binding
-from textual.screen import Screen
+from rich.console import Console
+from rich.panel import Panel
+from rich.prompt import Prompt
+
+console = Console()
 
 
-class MainMenu(Screen):
-    """Main menu screen"""
+def show_main_menu():
+    """Display the main menu"""
+    console.clear()
+    console.print()
+    console.print(Panel.fit(
+        "[bold cyan]🎯 Daily Tracker[/bold cyan]\n"
+        "[dim]Select an option below[/dim]",
+        border_style="cyan"
+    ))
+    console.print()
+    console.print("  [bold cyan]1.[/bold cyan] 📝 New Entry")
+    console.print("  [bold cyan]2.[/bold cyan] 👁️  View Entries")
+    console.print("  [bold cyan]3.[/bold cyan] 🔍 Search Entries")
+    console.print("  [bold cyan]4.[/bold cyan] 📊 Statistics")
+    console.print("  [bold cyan]5.[/bold cyan] 🏆 Achievements")
+    console.print("  [bold cyan]6.[/bold cyan] ⚙️  Configuration")
+    console.print("  [bold cyan]7.[/bold cyan] 📤 Export Data")
+    console.print("  [bold cyan]8.[/bold cyan] 👤 Profile")
+    console.print("  [bold cyan]9.[/bold cyan] ❓ Help")
+    console.print("  [bold red]0.[/bold red] ❌ Exit")
+    console.print()
+
+
+def handle_new_entry():
+    """Handle new entry creation"""
+    console.print("\n[bold cyan]📝 Creating New Entry[/bold cyan]")
+    console.print("[dim]Running CLI command...[/dim]\n")
     
-    BINDINGS = [
-        Binding("n", "new_entry", "New Entry", priority=True),
-        Binding("v", "view_entries", "View Entries", priority=True),
-        Binding("s", "search", "Search", priority=True),
-        Binding("t", "stats", "Statistics", priority=True),
-        Binding("a", "achievements", "Achievements", priority=True),
-        Binding("c", "config", "Configuration", priority=True),
-        Binding("e", "export", "Export Data", priority=True),
-        Binding("p", "profile", "Profile", priority=True),
-        Binding("q", "quit", "Quit", priority=True),
-    ]
+    from tracker.cli.commands.new import new as new_cmd
+    from click.testing import CliRunner
+    
+    runner = CliRunner()
+    result = runner.invoke(new_cmd, [], catch_exceptions=False, standalone_mode=False)
+    
+    console.print("\n[dim]Press Enter to continue...[/dim]")
+    input()
 
-    def compose(self) -> ComposeResult:
-        """Compose the main menu layout"""
-        yield Header(show_clock=True)
-        yield Container(
-            Static(
-                "[bold cyan]🎯 Daily Tracker - Interactive TUI[/bold cyan]\n\n"
-                "[dim]Navigate with arrow keys or press hotkeys[/dim]",
-                id="title"
-            ),
-            Vertical(
-                Button("📝 New Entry [dim](n)[/dim]", id="new_entry", variant="primary"),
-                Button("👁️  View Entries [dim](v)[/dim]", id="view_entries"),
-                Button("🔍 Search [dim](s)[/dim]", id="search"),
-                Button("📊 Statistics [dim](t)[/dim]", id="stats"),
-                Button("🏆 Achievements [dim](a)[/dim]", id="achievements"),
-                Button("⚙️  Configuration [dim](c)[/dim]", id="config"),
-                Button("📤 Export Data [dim](e)[/dim]", id="export"),
-                Button("👤 Profile [dim](p)[/dim]", id="profile"),
-                Button("❌ Quit [dim](q)[/dim]", id="quit", variant="error"),
-                id="menu_buttons"
-            ),
-            id="main_container"
-        )
-        yield Footer()
 
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Handle button presses"""
-        button_id = event.button.id
+def handle_view_entries():
+    """Handle viewing entries"""
+    console.print("\n[bold cyan]👁️  View Entries[/bold cyan]\n")
+    
+    from tracker.cli.commands.list import list as list_cmd
+    from click.testing import CliRunner
+    
+    runner = CliRunner()
+    result = runner.invoke(list_cmd, ['--days', '30'], catch_exceptions=False)
+    
+    console.print("\n[dim]Press Enter to continue...[/dim]")
+    input()
+
+
+def handle_search():
+    """Handle search"""
+    console.print("\n[bold cyan]🔍 Search Entries[/bold cyan]")
+    query = Prompt.ask("Enter search term")
+    
+    if query:
+        from tracker.cli.commands.search import search as search_cmd
+        from click.testing import CliRunner
         
-        if button_id == "new_entry":
-            self.action_new_entry()
-        elif button_id == "view_entries":
-            self.action_view_entries()
-        elif button_id == "search":
-            self.action_search()
-        elif button_id == "stats":
-            self.action_stats()
-        elif button_id == "achievements":
-            self.action_achievements()
-        elif button_id == "config":
-            self.action_config()
-        elif button_id == "export":
-            self.action_export()
-        elif button_id == "profile":
-            self.action_profile()
-        elif button_id == "quit":
-            self.app.exit()
-
-    def action_new_entry(self) -> None:
-        """Navigate to new entry screen"""
-        from .screens.new_entry import NewEntryScreen
-        self.app.push_screen(NewEntryScreen())
-
-    def action_view_entries(self) -> None:
-        """Navigate to view entries screen"""
-        from .screens.view_entries import ViewEntriesScreen
-        self.app.push_screen(ViewEntriesScreen())
-
-    def action_search(self) -> None:
-        """Navigate to search screen"""
-        from .screens.search import SearchScreen
-        self.app.push_screen(SearchScreen())
-
-    def action_stats(self) -> None:
-        """Navigate to statistics screen"""
-        from .screens.stats import StatsScreen
-        self.app.push_screen(StatsScreen())
-
-    def action_achievements(self) -> None:
-        """Navigate to achievements screen"""
-        from .screens.achievements import AchievementsScreen
-        self.app.push_screen(AchievementsScreen())
-
-    def action_config(self) -> None:
-        """Navigate to configuration screen"""
-        from .screens.config import ConfigScreen
-        self.app.push_screen(ConfigScreen())
-
-    def action_export(self) -> None:
-        """Navigate to export screen"""
-        from .screens.export import ExportScreen
-        self.app.push_screen(ExportScreen())
-
-    def action_profile(self) -> None:
-        """Navigate to profile screen"""
-        from .screens.profile import ProfileScreen
-        self.app.push_screen(ProfileScreen())
+        runner = CliRunner()
+        result = runner.invoke(search_cmd, [query], catch_exceptions=False)
+    
+    console.print("\n[dim]Press Enter to continue...[/dim]")
+    input()
 
 
-class TrackerTUI(App):
-    """Main Tracker TUI Application"""
+def handle_stats():
+    """Handle statistics"""
+    console.print("\n[bold cyan]📊 Statistics[/bold cyan]\n")
     
-    CSS = """
-    #main_container {
-        align: center middle;
-        width: 80;
-        height: auto;
-    }
+    from tracker.cli.commands.stats import stats as stats_cmd
+    from click.testing import CliRunner
     
-    #title {
-        text-align: center;
-        padding: 1 2;
-        margin-bottom: 2;
-    }
+    runner = CliRunner()
+    result = runner.invoke(stats_cmd, [], catch_exceptions=False)
     
-    #menu_buttons {
-        width: 60;
-        height: auto;
-        align: center middle;
-    }
+    console.print("\n[dim]Press Enter to continue...[/dim]")
+    input()
+
+
+def handle_achievements():
+    """Handle achievements"""
+    console.print("\n[bold cyan]🏆 Achievements[/bold cyan]\n")
     
-    Button {
-        width: 100%;
-        margin: 1 2;
-    }
+    from tracker.cli.commands.achievements import achievements as ach_cmd
+    from click.testing import CliRunner
     
-    .info-panel {
-        border: solid $primary;
-        height: auto;
-        padding: 1 2;
-        margin: 1 2;
-    }
+    runner = CliRunner()
+    result = runner.invoke(ach_cmd, [], catch_exceptions=False)
     
-    .form-container {
-        width: 80;
-        height: auto;
-        align: center middle;
-        padding: 2;
-    }
+    console.print("\n[dim]Press Enter to continue...[/dim]")
+    input()
+
+
+def handle_config():
+    """Handle configuration"""
+    console.print("\n[bold cyan]⚙️  Configuration[/bold cyan]\n")
     
-    Input {
-        margin: 1 2;
-    }
+    from tracker.cli.commands.config import config as config_cmd
+    from click.testing import CliRunner
     
-    Label {
-        margin: 1 2;
-    }
+    runner = CliRunner()
+    result = runner.invoke(config_cmd, ['show'], catch_exceptions=False)
     
-    DataTable {
-        margin: 1 2;
-    }
-    """
+    console.print("\n[dim]Press Enter to continue...[/dim]")
+    input()
+
+
+def handle_export():
+    """Handle export"""
+    console.print("\n[bold cyan]📤 Export Data[/bold cyan]")
+    console.print("\n1. Export to CSV")
+    console.print("2. Export to JSON")
+    console.print("0. Back")
     
-    TITLE = "Tracker TUI"
-    SUB_TITLE = "Daily tracking with AI insights"
+    choice = Prompt.ask("\nSelect format", choices=["1", "2", "0"], default="0")
     
-    def on_mount(self) -> None:
-        """Initialize the application"""
-        self.push_screen(MainMenu())
+    if choice == "1":
+        from tracker.cli.commands.export import export as export_cmd
+        from click.testing import CliRunner
+        
+        runner = CliRunner()
+        result = runner.invoke(export_cmd, ['--format', 'csv'], catch_exceptions=False)
+    elif choice == "2":
+        from tracker.cli.commands.export import export as export_cmd
+        from click.testing import CliRunner
+        
+        runner = CliRunner()
+        result = runner.invoke(export_cmd, ['--format', 'json'], catch_exceptions=False)
+    
+    if choice != "0":
+        console.print("\n[dim]Press Enter to continue...[/dim]")
+        input()
+
+
+def handle_profile():
+    """Handle profile"""
+    console.print("\n[bold cyan]👤 Profile[/bold cyan]\n")
+    
+    from tracker.cli.commands.profile import profile as profile_cmd
+    from click.testing import CliRunner
+    
+    runner = CliRunner()
+    result = runner.invoke(profile_cmd, ['show'], catch_exceptions=False)
+    
+    console.print("\n[dim]Press Enter to continue...[/dim]")
+    input()
+
+
+def handle_help():
+    """Show help"""
+    console.print("\n[bold cyan]❓ Help[/bold cyan]\n")
+    console.print("This is a menu-driven interface for Tracker.")
+    console.print("\nYou can also use direct CLI commands:")
+    console.print("  [cyan]tracker new[/cyan]           - Create new entry")
+    console.print("  [cyan]tracker show today[/cyan]    - Show today's entry")
+    console.print("  [cyan]tracker list[/cyan]          - List recent entries")
+    console.print("  [cyan]tracker stats[/cyan]         - View statistics")
+    console.print("  [cyan]tracker --help[/cyan]        - Full command list")
+    console.print("\n[dim]Press Enter to continue...[/dim]")
+    input()
 
 
 def run_tui():
-    """Run the TUI application"""
-    app = TrackerTUI()
-    app.run()
+    """Run the CLI menu application"""
+    while True:
+        try:
+            show_main_menu()
+            choice = Prompt.ask("Select option", choices=["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"], default="0")
+            
+            if choice == "0":
+                console.print("\n[yellow]👋 Goodbye![/yellow]\n")
+                break
+            elif choice == "1":
+                handle_new_entry()
+            elif choice == "2":
+                handle_view_entries()
+            elif choice == "3":
+                handle_search()
+            elif choice == "4":
+                handle_stats()
+            elif choice == "5":
+                handle_achievements()
+            elif choice == "6":
+                handle_config()
+            elif choice == "7":
+                handle_export()
+            elif choice == "8":
+                handle_profile()
+            elif choice == "9":
+                handle_help()
+                
+        except KeyboardInterrupt:
+            console.print("\n\n[yellow]👋 Goodbye![/yellow]\n")
+            break
+        except Exception as e:
+            console.print(f"\n[red]Error: {e}[/red]")
+            console.print("\n[dim]Press Enter to continue...[/dim]")
+            input()

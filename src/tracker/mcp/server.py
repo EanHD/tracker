@@ -127,7 +127,7 @@ async def list_tools() -> list[Tool]:
                     },
                     "notes": {
                         "type": "string",
-                        "description": "Free-form notes about the day",
+                        "description": "Journal entry - describe your day, thoughts, and feelings",
                     },
                     "stress_level": {
                         "type": "integer",
@@ -230,13 +230,13 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="search_entries",
-            description="Full-text search across entry notes",
+            description="Full-text search across entry journal and priority",
             inputSchema={
                 "type": "object",
                 "properties": {
                     "query": {
                         "type": "string",
-                        "description": "Search query (searches notes field)",
+                        "description": "Search query (searches journal entry field)",
                     },
                     "limit": {
                         "type": "integer",
@@ -778,7 +778,7 @@ Work: {entry.hours_worked or 0} hours{' (including side income)' if entry.side_i
 Spending: Food ${entry.food_spent or 0:.2f}, Gas ${entry.gas_spent or 0:.2f}
 Stress level: {entry.stress_level}/10
 Priority: {entry.priority or 'not specified'}
-Notes: {entry.notes or 'none'}
+Journal: {entry.notes or 'none'}
 
 Guidelines:
 - Acknowledge challenges without toxic positivity

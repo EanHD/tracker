@@ -52,7 +52,7 @@ Wellbeing:
 """
 
         if entry.notes:
-            prompt += f"\nNotes: {entry.notes}"
+            prompt += f"\nJournal: {entry.notes}"
 
         prompt += """
 

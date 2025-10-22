@@ -16,9 +16,9 @@ console = Console()
 @click.option("--limit", default=20, type=int, help="Maximum number of results", show_default=True)
 def search(query: str, limit: int):
     """
-    Search entries by notes or priority text
+    Search entries by journal or priority text
     
-    QUERY: Search term to look for in notes and priority fields
+    QUERY: Search term to look for in journal and priority fields
     
     Examples:
     
@@ -51,7 +51,7 @@ def search(query: str, limit: int):
         table.add_column("Stress", justify="center", width=8)
         table.add_column("Income", justify="right", width=10)
         table.add_column("Priority", width=20)
-        table.add_column("Notes", width=50)
+        table.add_column("Journal", width=50)
         
         for entry in results:
             # Highlight search term in text

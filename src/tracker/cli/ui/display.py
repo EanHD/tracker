@@ -3,6 +3,7 @@
 from datetime import date
 from decimal import Decimal
 from typing import Optional
+import textwrap
 
 from rich.console import Console
 from rich.panel import Panel
@@ -65,7 +66,7 @@ def display_entry(entry, show_feedback: bool = False):
     
     if entry.notes:
         lines.append("")
-        lines.append("[bold cyan]📝 Notes[/bold cyan]")
+        lines.append("[bold cyan]� Journal[/bold cyan]")
         lines.append(f"  {entry.notes}")
     
     # Create panel
@@ -135,7 +136,12 @@ def display_entry_preview(entry_data: dict):
     lines.append(f"Priority: {entry_data.get('priority') or 'N/A'}")
     
     if entry_data.get('notes'):
-        lines.append(f"Notes: {entry_data['notes']}")
+        lines.append("")
+        # Word wrap the journal entry to avoid splitting words
+        wrapped_lines = textwrap.wrap(entry_data['notes'], width=70, break_long_words=False, break_on_hyphens=False)
+        lines.append("Journal:")
+        for line in wrapped_lines:
+            lines.append(f"  {line}")
     
     panel = Panel(
         "\n".join(lines),

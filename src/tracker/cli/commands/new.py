@@ -87,7 +87,7 @@ def _trigger_onboarding():
 @click.option("--gas", type=float, help="Gas spent")
 @click.option("--stress", type=int, help="Stress level (1-10)")
 @click.option("--priority", type=str, help="Today's priority")
-@click.option("--notes", type=str, help="Notes about the day")
+@click.option("--notes", type=str, help="Journal entry for the day")
 def new(quick, no_feedback, **kwargs):
     """Create a new daily entry"""
     
@@ -202,8 +202,8 @@ def _interactive_entry(quick: bool) -> dict:
         priority = prompt_text("Today's priority: ", default="")
         
         if not quick:
-            console.print("\n[bold cyan]📝 Notes[/bold cyan]")
-            notes = prompt_text("Notes (optional, press Enter to skip): ", multiline=False)
+            console.print("\n[bold cyan]� Journal[/bold cyan]")
+            notes = prompt_text("How was your day? (optional, press Enter to skip): ", multiline=False)
         else:
             notes = None
         
@@ -248,7 +248,7 @@ def _edit_entry_data(entry_data: dict, quick: bool) -> dict:
         '10': ('gas_spent', '⛽ Gas spent', lambda: prompt_decimal("New gas spent: $", default="0")),
         '11': ('stress_level', '🧘 Stress level', lambda: prompt_integer_range("New stress level (1-10): ", 1, 10)),
         '12': ('priority', '🎯 Priority', lambda: prompt_text("New priority: ", default="")),
-        '13': ('notes', '📝 Notes', lambda: prompt_text("New notes: ", multiline=False, default="")),
+        '13': ('notes', '� Journal', lambda: prompt_text("How was your day?: ", multiline=False, default="")),
     }
     
     try:

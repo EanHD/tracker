@@ -35,7 +35,7 @@ console = Console()
 @click.option("--cash", type=float, help="Update cash on hand")
 @click.option("--bank", type=float, help="Update bank balance")
 @click.option("--debts", type=float, help="Update total debts")
-@click.option("--notes", type=str, help="Update notes")
+@click.option("--notes", type=str, help="Update journal entry")
 @click.option("--priority", type=str, help="Update priority")
 @click.option("--regenerate-feedback", is_flag=True, help="Regenerate AI feedback after editing")
 def edit(
@@ -180,7 +180,7 @@ def display_current_entry(entry):
     # Wellbeing fields
     table.add_row("Stress level", f"{entry.stress_level}/10")
     table.add_row("Priority", entry.priority or "[dim]none[/dim]")
-    table.add_row("Notes", entry.notes or "[dim]none[/dim]")
+    table.add_row("Journal", entry.notes or "[dim]none[/dim]")
     
     console.print(table)
 
@@ -274,7 +274,7 @@ def prompt_for_updates(entry) -> Optional[EntryUpdate]:
     if priority != (entry.priority or ""):
         updates['priority'] = priority if priority else None
     
-    notes = prompt_text("Notes", default=entry.notes or "", multiline=False)
+    notes = prompt_text("Journal (how was your day?)", default=entry.notes or "", multiline=False)
     if notes != (entry.notes or ""):
         updates['notes'] = notes if notes else None
     

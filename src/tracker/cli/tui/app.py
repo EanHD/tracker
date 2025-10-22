@@ -18,7 +18,7 @@ def show_main_menu():
     ))
     console.print()
     console.print("  [bold cyan]1.[/bold cyan] 📝 New Entry")
-    console.print("  [bold cyan]2.[/bold cyan] 👁 View Entries")
+    console.print("  [bold cyan]2.[/bold cyan] 👁️  View Entries")
     console.print("  [bold cyan]3.[/bold cyan] 🔍 Search Entries")
     console.print("  [bold cyan]4.[/bold cyan] 📊 Statistics")
     console.print("  [bold cyan]5.[/bold cyan] 🏆 Achievements")
@@ -51,7 +51,7 @@ def handle_view_entries():
     from tracker.services.entry_service import EntryService
     from rich.table import Table
     
-    console.print("\n[bold cyan]👁 View Entries[/bold cyan]\n")
+    console.print("\n[bold cyan]👁️  View Entries[/bold cyan]\n")
     
     with SessionLocal() as db:
         service = EntryService(db)

@@ -62,20 +62,21 @@ class ViewEntriesScreen(Screen):
                 )
                 
                 for entry in entries:
+                    # Calculate expenses from actual model fields
                     total_expenses = (
-                        entry.bills + entry.food + entry.entertainment +
-                        entry.shopping + entry.health + entry.transport +
-                        entry.education + entry.gifts + entry.other_expenses
+                        entry.bills_due_today + entry.food_spent + entry.gas_spent
                     )
-                    balance = entry.income - total_expenses
+                    # Income is income_today + side_income
+                    total_income = entry.income_today + entry.side_income
+                    balance = total_income - total_expenses
                     
                     table.add_row(
                         str(entry.date),
-                        f"${entry.income:.2f}",
+                        f"${total_income:.2f}",
                         f"${total_expenses:.2f}",
                         f"${balance:.2f}",
-                        str(entry.work_hours or 0),
-                        str(entry.mood_level or "-"),
+                        str(entry.hours_worked or 0),
+                        "-",  # Model doesn't have mood_level
                         str(entry.stress_level or "-")
                     )
                 

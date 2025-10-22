@@ -53,18 +53,16 @@ class StatsScreen(Screen):
                 if not entries:
                     content = "[yellow]No entries found for the last 30 days[/yellow]"
                 else:
-                    total_income = sum(e.income for e in entries)
+                    # Calculate totals using correct field names
+                    total_income = sum(e.income_today + e.side_income for e in entries)
                     total_expenses = sum(
-                        e.bills + e.food + e.entertainment + e.shopping +
-                        e.health + e.transport + e.education + e.gifts + e.other_expenses
+                        e.bills_due_today + e.food_spent + e.gas_spent
                         for e in entries
                     )
                     net_balance = total_income - total_expenses
                     
-                    avg_work = sum(e.work_hours or 0 for e in entries) / len(entries)
-                    avg_mood = sum(e.mood_level or 0 for e in entries) / len([e for e in entries if e.mood_level])
-                    avg_stress = sum(e.stress_level or 0 for e in entries) / len([e for e in entries if e.stress_level])
-                    avg_sleep = sum(e.sleep_hours or 0 for e in entries) / len([e for e in entries if e.sleep_hours])
+                    avg_work = sum(float(e.hours_worked) for e in entries) / len(entries)
+                    avg_stress = sum(e.stress_level for e in entries) / len(entries)
                     
                     content = f"""
 [bold green]📅 Last 30 Days Summary[/bold green]
@@ -77,9 +75,7 @@ class StatsScreen(Screen):
 
 [bold]Work & Wellbeing[/bold]
 ⏰ Avg Work Hours:    {avg_work:.1f} hrs/day
-😊 Avg Mood:          {avg_mood:.1f}/10
 😰 Avg Stress:        {avg_stress:.1f}/10
-😴 Avg Sleep:         {avg_sleep:.1f} hrs/night
 
 [bold]Tracking Stats[/bold]
 📝 Total Entries:     {len(entries)}

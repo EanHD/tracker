@@ -35,53 +35,38 @@ class NewEntryScreen(Screen):
                 Label("Date (YYYY-MM-DD, leave empty for today):"),
                 Input(placeholder="2024-01-15", id="date_input"),
                 
-                Label("💰 Income (e.g., 150.00):"),
-                Input(placeholder="0.00", id="income_input"),
+                Label("💰 Income Today (e.g., 150.00):"),
+                Input(placeholder="0.00", id="income_today_input"),
                 
-                Label("💸 Bills (e.g., 50.00):"),
+                Label("💼 Side Income (e.g., 50.00):"),
+                Input(placeholder="0.00", id="side_income_input"),
+                
+                Label("💸 Bills Due Today (e.g., 50.00):"),
                 Input(placeholder="0.00", id="bills_input"),
                 
-                Label("🍕 Food (e.g., 25.00):"),
+                Label("🍕 Food Spent (e.g., 25.00):"),
                 Input(placeholder="0.00", id="food_input"),
                 
-                Label("🎮 Entertainment (e.g., 15.00):"),
-                Input(placeholder="0.00", id="entertainment_input"),
+                Label("⛽ Gas Spent (e.g., 50.00):"),
+                Input(placeholder="0.00", id="gas_input"),
                 
-                Label("🛍️ Shopping (e.g., 30.00):"),
-                Input(placeholder="0.00", id="shopping_input"),
-                
-                Label("💊 Health (e.g., 10.00):"),
-                Input(placeholder="0.00", id="health_input"),
-                
-                Label("🚗 Transport (e.g., 20.00):"),
-                Input(placeholder="0.00", id="transport_input"),
-                
-                Label("📚 Education (e.g., 40.00):"),
-                Input(placeholder="0.00", id="education_input"),
-                
-                Label("🎁 Gifts (e.g., 25.00):"),
-                Input(placeholder="0.00", id="gifts_input"),
-                
-                Label("📊 Other Expenses (e.g., 10.00):"),
-                Input(placeholder="0.00", id="other_input"),
-                
-                Label("⏰ Work Hours (0-24):"),
-                Input(placeholder="8", id="work_hours_input"),
+                Label("⏰ Hours Worked (0-24):"),
+                Input(placeholder="8", id="hours_worked_input"),
                 
                 Label("😰 Stress Level (1-10):"),
                 Input(placeholder="5", id="stress_input"),
                 
-                Label("😊 Mood Level (1-10):"),
-                Input(placeholder="7", id="mood_input"),
+                Label("🏦 Cash on Hand (optional, encrypted):"),
+                Input(placeholder="100.00", id="cash_input"),
                 
-                Label("😴 Sleep Hours (0-24):"),
-                Input(placeholder="8", id="sleep_input"),
+                Label("💳 Bank Balance (optional, encrypted):"),
+                Input(placeholder="1000.00", id="bank_input"),
                 
-                Label("🏃 Exercise Minutes:"),
-                Input(placeholder="30", id="exercise_input"),
+                Label("💳 Total Debts (optional, encrypted):"),
+                Input(placeholder="0.00", id="debts_input"),
                 
-                Label("👥 Social Time Minutes:"),
-                Input(placeholder="60", id="social_input"),
+                Label("⭐ Priority (optional):"),
+                Input(placeholder="e.g., Fix car, Go to gym", id="priority_input"),
                 
                 Label("📝 Notes (optional):"),
                 Input(placeholder="How was your day?", id="notes_input"),
@@ -135,49 +120,46 @@ class NewEntryScreen(Screen):
             date_str = self.query_one("#date_input", Input).value.strip()
             entry_date = date.fromisoformat(date_str) if date_str else date.today()
             
-            # Get all financial data
-            income = self._get_decimal("income_input")
-            bills = self._get_decimal("bills_input")
-            food = self._get_decimal("food_input")
-            entertainment = self._get_decimal("entertainment_input")
-            shopping = self._get_decimal("shopping_input")
-            health = self._get_decimal("health_input")
-            transport = self._get_decimal("transport_input")
-            education = self._get_decimal("education_input")
-            gifts = self._get_decimal("gifts_input")
-            other = self._get_decimal("other_input")
+            # Get financial data using correct field names
+            income_today = self._get_decimal("income_today_input")
+            side_income = self._get_decimal("side_income_input")
+            bills_due_today = self._get_decimal("bills_input")
+            food_spent = self._get_decimal("food_input")
+            gas_spent = self._get_decimal("gas_input")
+            
+            # Get optional encrypted fields
+            cash_on_hand_str = self.query_one("#cash_input", Input).value.strip()
+            cash_on_hand = Decimal(cash_on_hand_str) if cash_on_hand_str else None
+            
+            bank_balance_str = self.query_one("#bank_input", Input).value.strip()
+            bank_balance = Decimal(bank_balance_str) if bank_balance_str else None
+            
+            debts_total_str = self.query_one("#debts_input", Input).value.strip()
+            debts_total = Decimal(debts_total_str) if debts_total_str else None
             
             # Get metrics
-            work_hours = self._get_int("work_hours_input")
+            hours_worked = self._get_decimal("hours_worked_input")
             stress_level = self._get_int("stress_input", 5)
-            mood_level = self._get_int("mood_input", 7)
-            sleep_hours = self._get_int("sleep_input", 8)
-            exercise_minutes = self._get_int("exercise_input")
-            social_minutes = self._get_int("social_input")
             
-            # Get notes
-            notes = self.query_one("#notes_input", Input).value.strip()
+            # Get optional fields
+            priority = self.query_one("#priority_input", Input).value.strip() or None
+            notes = self.query_one("#notes_input", Input).value.strip() or None
             
-            # Create entry
+            # Create entry with correct schema
             entry_data = EntryCreate(
                 date=entry_date,
-                income=income,
-                bills=bills,
-                food=food,
-                entertainment=entertainment,
-                shopping=shopping,
-                health=health,
-                transport=transport,
-                education=education,
-                gifts=gifts,
-                other_expenses=other,
-                work_hours=work_hours,
+                income_today=income_today,
+                side_income=side_income,
+                bills_due_today=bills_due_today,
+                food_spent=food_spent,
+                gas_spent=gas_spent,
+                hours_worked=hours_worked,
                 stress_level=stress_level,
-                mood_level=mood_level,
-                sleep_hours=sleep_hours,
-                exercise_minutes=exercise_minutes,
-                social_minutes=social_minutes,
-                notes=notes if notes else None
+                cash_on_hand=cash_on_hand,
+                bank_balance=bank_balance,
+                debts_total=debts_total,
+                priority=priority,
+                notes=notes
             )
             
             # Save to database

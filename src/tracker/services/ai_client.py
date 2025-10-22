@@ -195,7 +195,8 @@ class OpenAIClient(AIClient):
         # Some models (like O1, O3, reasoning models) don't support temperature or system messages
         
         # Check if this is a reasoning model that doesn't support system messages
-        is_reasoning_model = self.model and any(x in self.model.lower() for x in ['o1', 'o3', 'reasoning'])
+        # GPT-5 models appear to have issues with system messages
+        is_reasoning_model = self.model and any(x in self.model.lower() for x in ['o1', 'o3', 'reasoning', 'gpt-5'])
         
         # Build messages - reasoning models need user message only
         if is_reasoning_model:
@@ -230,8 +231,8 @@ class OpenAIClient(AIClient):
         else:
             params["max_tokens"] = 500
         
-        # Add temperature only for models that support it (not O1/O3/reasoning/nano models)
-        if not (self.model and any(x in self.model.lower() for x in ['o1', 'o3', 'reasoning', 'nano'])):
+        # Add temperature only for models that support it (not O1/O3/reasoning/nano/mini models)
+        if not (self.model and any(x in self.model.lower() for x in ['o1', 'o3', 'reasoning', 'nano', 'mini', 'gpt-5'])):
             params["temperature"] = 0.7
         
         try:

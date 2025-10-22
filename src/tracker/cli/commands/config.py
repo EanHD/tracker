@@ -163,7 +163,7 @@ def setup():
         if provider == "anthropic":
             model = "claude-3-5-sonnet-20241022"
         elif provider == "openai":
-            model = "gpt-5-mini"
+            model = "gpt-4o-mini"
         elif provider == "openrouter":
             model = "anthropic/claude-3.5-sonnet"
         else:  # local
@@ -173,8 +173,10 @@ def setup():
             console.print("\n[dim]Available models: claude-3-opus, claude-3-sonnet, claude-3-haiku[/dim]")
             model = Prompt.ask("Model name", default="claude-3-5-sonnet-20241022")
         elif provider == "openai":
-            console.print("\n[dim]Available models: gpt-5, gpt-5-mini, gpt-4o, gpt-4o-mini[/dim]")
-            model = Prompt.ask("Model name", default="gpt-5-mini")
+            console.print("\n[dim]Recommended: gpt-4o-mini (best for creative tasks)[/dim]")
+            console.print("[dim]Also available: gpt-4o, gpt-4-turbo[/dim]")
+            console.print("[yellow]Note: GPT-5 models require Responses API (not yet supported)[/yellow]")
+            model = Prompt.ask("Model name", default="gpt-4o-mini")
         elif provider == "openrouter":
             console.print("\n[dim]Available models: anthropic/claude-3.5-sonnet, openai/gpt-4, etc.[/dim]")
             model = Prompt.ask("Model name", default="anthropic/claude-3.5-sonnet")

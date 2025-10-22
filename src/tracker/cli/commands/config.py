@@ -160,15 +160,14 @@ def setup():
     use_default_model = Confirm.ask("Use default model?", default=True)
     
     if use_default_model:
-        model = None
         if provider == "anthropic":
-            model_name = "claude-3-5-sonnet-20241022"
+            model = "claude-3-5-sonnet-20241022"
         elif provider == "openai":
-            model_name = "gpt-4"
+            model = "gpt-4"
         elif provider == "openrouter":
-            model_name = "anthropic/claude-3.5-sonnet"
+            model = "anthropic/claude-3.5-sonnet"
         else:  # local
-            model_name = "llama3.2:3b"
+            model = "llama3.2:3b"
     else:
         if provider == "anthropic":
             console.print("\n[dim]Available models: claude-3-opus, claude-3-sonnet, claude-3-haiku[/dim]")
@@ -183,7 +182,6 @@ def setup():
             console.print("\n[dim]Available models depend on your Ollama installation[/dim]")
             console.print("[dim]Common: llama3.2:3b, llama3.2:1b, gemma2:2b[/dim]")
             model = Prompt.ask("Model name", default="llama3.2:3b")
-        model_name = model
     
     # Encryption key
     console.print("\n[bold cyan]Encryption Configuration[/bold cyan]")
@@ -197,7 +195,7 @@ def setup():
     # Show configuration summary with confirmation
     console.print("\n[bold green]✅ Configuration Summary[/bold green]\n")
     console.print(f"AI Provider: [cyan]{provider}[/cyan]")
-    console.print(f"Model: [cyan]{model_name}[/cyan]")
+    console.print(f"Model: [cyan]{model}[/cyan]")
     
     if api_key:
         # Show first/last few chars of API key for verification

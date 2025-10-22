@@ -190,30 +190,64 @@ class OpenAIClient(AIClient):
         client = self._get_client()
         prompt = self._build_prompt(entry, character_sheet)
         
+        # Determine which parameters to use based on model
+        # Newer models (GPT-4, GPT-5, O1, O3) use max_completion_tokens
+        # Some models (like O1, O3, reasoning models) don't support temperature or system messages
+        
+        # Check if this is a reasoning model that doesn't support system messages
+        is_reasoning_model = self.model and any(x in self.model.lower() for x in ['o1', 'o3', 'reasoning'])
+        
+        # Build messages - reasoning models need user message only
+        if is_reasoning_model:
+            messages = [
+                {
+                    "role": "user",
+                    "content": f"""You are a supportive financial wellness coach who provides empathetic, non-judgmental encouragement to people tracking their daily finances.
+
+{prompt}"""
+                }
+            ]
+        else:
+            messages = [
+                {
+                    "role": "system",
+                    "content": "You are a supportive financial wellness coach who provides empathetic, non-judgmental encouragement to people tracking their daily finances."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
+        
+        params = {
+            "model": self.model,
+            "messages": messages,
+        }
+        
+        # Add token limit parameter based on model
+        if self.model and any(x in self.model.lower() for x in ['gpt-4', 'gpt-5', 'o1', 'o3']):
+            params["max_completion_tokens"] = 500
+        else:
+            params["max_tokens"] = 500
+        
+        # Add temperature only for models that support it (not O1/O3/reasoning/nano models)
+        if not (self.model and any(x in self.model.lower() for x in ['o1', 'o3', 'reasoning', 'nano'])):
+            params["temperature"] = 0.7
+        
         try:
-            response = client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a supportive financial wellness coach who provides empathetic, non-judgmental encouragement to people tracking their daily finances."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                max_tokens=500,
-                temperature=0.7,
-            )
+            response = client.chat.completions.create(**params)
             
             generation_time = time.time() - start_time
             
             content = response.choices[0].message.content
             
+            # Handle None/empty responses
+            if not content:
+                content = "No feedback generated. Please try again or use a different model."
+            
             metadata = {
                 "model": self.model,
-                "tokens_used": response.usage.total_tokens,
+                "tokens_used": response.usage.total_tokens if response.usage else 0,
                 "generation_time": generation_time,
             }
             

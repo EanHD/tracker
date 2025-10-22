@@ -13,6 +13,88 @@ from tracker.config import settings, get_env_file_path, get_config_dir
 console = Console()
 
 
+def save_provider_backup(env_path: Path, provider: str, config_dict: dict) -> None:
+    """Save provider-specific backup of .env file"""
+    backup_path = env_path.parent / f".env.backup.{provider}"
+    
+    # Build provider-specific config
+    lines = []
+    lines.append(f"# Tracker Configuration - {provider.upper()}\n")
+    lines.append(f"# Last saved: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+    lines.append("\n")
+    
+    # AI Provider config
+    lines.append("# AI Provider Configuration\n")
+    lines.append(f"AI_PROVIDER={provider}\n")
+    
+    if config_dict.get('api_key'):
+        lines.append(f"{config_dict['api_key_var']}={config_dict['api_key']}\n")
+    
+    if provider == 'anthropic':
+        lines.append(f"ANTHROPIC_MODEL={config_dict['model']}\n")
+    elif provider == 'openai':
+        lines.append(f"OPENAI_MODEL={config_dict['model']}\n")
+    elif provider == 'openrouter':
+        lines.append(f"OPENROUTER_MODEL={config_dict['model']}\n")
+    elif provider == 'local':
+        lines.append(f"LOCAL_API_URL={config_dict.get('local_url', 'http://localhost:11434/v1')}\n")
+        lines.append(f"LOCAL_MODEL={config_dict['model']}\n")
+    
+    lines.append("\n")
+    
+    # Encryption key (from current .env)
+    if env_path.exists():
+        with open(env_path, 'r') as f:
+            for line in f:
+                if line.strip().startswith('ENCRYPTION_KEY='):
+                    lines.append(line)
+                    break
+    elif config_dict.get('encryption_key'):
+        lines.append(f"ENCRYPTION_KEY={config_dict['encryption_key']}\n")
+    
+    # Write backup
+    with open(backup_path, 'w') as f:
+        f.writelines(lines)
+    
+    console.print(f"[dim]💾 Saved {provider} config to {backup_path.name}[/dim]")
+
+
+def load_provider_backup(env_path: Path, provider: str) -> dict:
+    """Load provider-specific backup and return config dict"""
+    backup_path = env_path.parent / f".env.backup.{provider}"
+    
+    if not backup_path.exists():
+        return None
+    
+    config = {}
+    with open(backup_path, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if '=' in line and not line.startswith('#'):
+                key, value = line.split('=', 1)
+                if key == 'ANTHROPIC_API_KEY':
+                    config['api_key'] = value
+                    config['api_key_var'] = 'ANTHROPIC_API_KEY'
+                elif key == 'OPENAI_API_KEY':
+                    config['api_key'] = value
+                    config['api_key_var'] = 'OPENAI_API_KEY'
+                elif key == 'OPENROUTER_API_KEY':
+                    config['api_key'] = value
+                    config['api_key_var'] = 'OPENROUTER_API_KEY'
+                elif key == 'ANTHROPIC_MODEL':
+                    config['model'] = value
+                elif key == 'OPENAI_MODEL':
+                    config['model'] = value
+                elif key == 'OPENROUTER_MODEL':
+                    config['model'] = value
+                elif key == 'LOCAL_MODEL':
+                    config['model'] = value
+                elif key == 'LOCAL_API_URL':
+                    config['local_url'] = value
+    
+    return config if config else None
+
+
 def write_env_file(config_dict: dict, env_path: Path) -> None:
     """Write configuration to .env file, replacing provider-specific sections"""
     
@@ -114,20 +196,19 @@ def setup():
     env_path = get_env_file_path()
     console.print(f"[dim]Configuration file: {env_path}[/dim]\n")
     
-    # Check if .env exists and offer backup
-    backup_path = None
-    
-    if env_path.exists():
-        console.print("[yellow]⚠️  Configuration file already exists[/yellow]")
-        
-        if Confirm.ask("Create backup before continuing?", default=True):
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            backup_path = env_path.parent / f".env.backup.{timestamp}"
-            shutil.copy2(env_path, backup_path)
-            console.print(f"[green]✅ Backup created: {backup_path}[/green]\n")
-    
     # AI Provider
     console.print("[bold cyan]AI Provider Configuration[/bold cyan]")
+    
+    # Check for existing backups
+    backup_dir = env_path.parent
+    available_backups = []
+    for provider in ["anthropic", "openai", "openrouter", "local"]:
+        backup_path = backup_dir / f".env.backup.{provider}"
+        if backup_path.exists():
+            available_backups.append(provider)
+    
+    if available_backups:
+        console.print(f"[dim]Found saved configs for: {', '.join(available_backups)}[/dim]\n")
     
     provider = Prompt.ask(
         "Choose AI provider",
@@ -137,53 +218,88 @@ def setup():
     
     console.print(f"\nSelected provider: [green]{provider}[/green]")
     
-    # API Key
-    if provider == "anthropic":
-        console.print("\n[dim]Get your API key from: https://console.anthropic.com/[/dim]")
-        api_key = Prompt.ask("Anthropic API key", password=True)
-        env_var = "ANTHROPIC_API_KEY"
-    elif provider == "openai":
-        console.print("\n[dim]Get your API key from: https://platform.openai.com/api-keys[/dim]")
-        api_key = Prompt.ask("OpenAI API key", password=True)
-        env_var = "OPENAI_API_KEY"
-    elif provider == "openrouter":
-        console.print("\n[dim]Get your API key from: https://openrouter.ai/keys[/dim]")
-        api_key = Prompt.ask("OpenRouter API key", password=True)
-        env_var = "OPENROUTER_API_KEY"
-    else:  # local
-        console.print("\n[dim]Using local AI (Ollama). No API key needed.[/dim]")
-        console.print("[dim]Make sure Ollama is running: http://localhost:11434[/dim]")
-        api_key = None
-        env_var = None
+    # Try to load existing backup for this provider
+    saved_config = load_provider_backup(env_path, provider)
     
-    # Model configuration
-    use_default_model = Confirm.ask("Use default model?", default=True)
+    if saved_config:
+        console.print(f"\n[yellow]📋 Found saved {provider} configuration[/yellow]")
+        if saved_config.get('model'):
+            console.print(f"[dim]Last used model: {saved_config['model']}[/dim]")
+        
+        use_saved = Confirm.ask("Use saved configuration?", default=True)
+        
+        if use_saved:
+            # Use saved config but allow model change
+            api_key = saved_config.get('api_key')
+            env_var = saved_config.get('api_key_var')
+            
+            if saved_config.get('model'):
+                use_saved_model = Confirm.ask(
+                    f"Use saved model ({saved_config['model']})?",
+                    default=True
+                )
+                
+                if use_saved_model:
+                    model = saved_config['model']
+                else:
+                    model = Prompt.ask("Enter model name", default=saved_config['model'])
+            else:
+                model = None
+            
+            # Skip to encryption step
+            console.print("\n[green]✅ Using saved configuration[/green]")
+        else:
+            saved_config = None  # Fall through to new config
     
-    if use_default_model:
+    if not saved_config:
+        # New configuration
+        # API Key
         if provider == "anthropic":
-            model = "claude-3-5-sonnet-20241022"
+            console.print("\n[dim]Get your API key from: https://console.anthropic.com/[/dim]")
+            api_key = Prompt.ask("Anthropic API key", password=True)
+            env_var = "ANTHROPIC_API_KEY"
         elif provider == "openai":
-            model = "gpt-4o-mini"
+            console.print("\n[dim]Get your API key from: https://platform.openai.com/api-keys[/dim]")
+            api_key = Prompt.ask("OpenAI API key", password=True)
+            env_var = "OPENAI_API_KEY"
         elif provider == "openrouter":
-            model = "anthropic/claude-3.5-sonnet"
+            console.print("\n[dim]Get your API key from: https://openrouter.ai/keys[/dim]")
+            api_key = Prompt.ask("OpenRouter API key", password=True)
+            env_var = "OPENROUTER_API_KEY"
         else:  # local
-            model = "llama3.2:3b"
-    else:
-        if provider == "anthropic":
-            console.print("\n[dim]Available models: claude-3-opus, claude-3-sonnet, claude-3-haiku[/dim]")
-            model = Prompt.ask("Model name", default="claude-3-5-sonnet-20241022")
-        elif provider == "openai":
-            console.print("\n[dim]Recommended: gpt-4o-mini (best for creative tasks)[/dim]")
-            console.print("[dim]Also available: gpt-4o, gpt-4-turbo[/dim]")
-            console.print("[yellow]Note: GPT-5 models require Responses API (not yet supported)[/yellow]")
-            model = Prompt.ask("Model name", default="gpt-4o-mini")
-        elif provider == "openrouter":
-            console.print("\n[dim]Available models: anthropic/claude-3.5-sonnet, openai/gpt-4, etc.[/dim]")
-            model = Prompt.ask("Model name", default="anthropic/claude-3.5-sonnet")
-        else:  # local
-            console.print("\n[dim]Available models depend on your Ollama installation[/dim]")
-            console.print("[dim]Common: llama3.2:3b, llama3.2:1b, gemma2:2b[/dim]")
-            model = Prompt.ask("Model name", default="llama3.2:3b")
+            console.print("\n[dim]Using local AI (Ollama). No API key needed.[/dim]")
+            console.print("[dim]Make sure Ollama is running: http://localhost:11434[/dim]")
+            api_key = None
+            env_var = None
+        
+        # Model configuration
+        use_default_model = Confirm.ask("Use default model?", default=True)
+        
+        if use_default_model:
+            if provider == "anthropic":
+                model = "claude-3-5-sonnet-20241022"
+            elif provider == "openai":
+                model = "gpt-4o-mini"
+            elif provider == "openrouter":
+                model = "anthropic/claude-3.5-sonnet"
+            else:  # local
+                model = "llama3.2:3b"
+        else:
+            if provider == "anthropic":
+                console.print("\n[dim]Available models: claude-3-opus, claude-3-sonnet, claude-3-haiku[/dim]")
+                model = Prompt.ask("Model name", default="claude-3-5-sonnet-20241022")
+            elif provider == "openai":
+                console.print("\n[dim]Recommended: gpt-4o-mini (best for creative tasks)[/dim]")
+                console.print("[dim]Also available: gpt-4o, gpt-4-turbo[/dim]")
+                console.print("[yellow]Note: GPT-5 models require Responses API (not yet supported)[/yellow]")
+                model = Prompt.ask("Model name", default="gpt-4o-mini")
+            elif provider == "openrouter":
+                console.print("\n[dim]Available models: anthropic/claude-3.5-sonnet, openai/gpt-4, etc.[/dim]")
+                model = Prompt.ask("Model name", default="anthropic/claude-3.5-sonnet")
+            else:  # local
+                console.print("\n[dim]Available models depend on your Ollama installation[/dim]")
+                console.print("[dim]Common: llama3.2:3b, llama3.2:1b, gemma2:2b[/dim]")
+                model = Prompt.ask("Model name", default="llama3.2:3b")
     
     # Encryption key
     console.print("\n[bold cyan]Encryption Configuration[/bold cyan]")
@@ -212,11 +328,7 @@ def setup():
     # Allow user to cancel before writing
     console.print()
     if not Confirm.ask("[bold]Does this look correct?[/bold]", default=True):
-        console.print("\n[yellow]❌ Configuration cancelled. No changes made.[/yellow]")
-        if backup_path and backup_path.exists():
-            backup_path.unlink()  # Remove backup if we're not making changes
-            console.print(f"[dim]Backup {backup_path} removed[/dim]")
-        console.print("\n[dim]Run 'tracker config setup' again to restart.[/dim]\n")
+        console.print("\n[yellow]❌ Configuration cancelled. No changes made.[/yellow]\n")
         return
     
     # Prepare configuration dictionary
@@ -228,23 +340,26 @@ def setup():
     }
     
     if provider == 'local':
-        config_dict['local_url'] = 'http://localhost:11434/v1'
+        config_dict['local_url'] = saved_config.get('local_url') if saved_config else 'http://localhost:11434/v1'
     
     if not settings.encryption_key:
         config_dict['encryption_key'] = Fernet.generate_key().decode()
+    
+    # Save provider-specific backup
+    save_provider_backup(env_path, provider, config_dict)
     
     # Write to .env
     try:
         write_env_file(config_dict, env_path)
         
         console.print("\n[bold green]✅ Configuration saved![/bold green]")
-        console.print(f"[dim]File: {env_path}[/dim]\n")
-        
-        if backup_path:
-            console.print(f"[dim]💾 Backup available at: {backup_path}[/dim]")
-            console.print(f"[dim]   To restore: cp {backup_path} {env_path}[/dim]\n")
+        console.print(f"[dim]Active config: {env_path}[/dim]")
+        console.print(f"[dim]Backup: .env.backup.{provider}[/dim]\n")
         
         console.print("[cyan]✨ Ready to use! Try: tracker new[/cyan]\n")
+        
+        # Show quick switch tip
+        console.print("[dim]💡 Tip: Run 'tracker config setup' again to quickly switch providers[/dim]\n")
         
         # Reload settings
         console.print("[dim]Note: Restart any running processes to pick up new config[/dim]\n")

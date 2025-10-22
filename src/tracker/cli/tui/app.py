@@ -193,6 +193,7 @@ def handle_search():
     from tracker.services.history_service import HistoryService
     from tracker.core.models import DailyEntry
     from rich.table import Table
+    from sqlalchemy import cast, String
     
     console.print("\n[bold cyan]🔍 Search Entries[/bold cyan]")
     query = Prompt.ask("Enter search term (date, text, or number)")
@@ -221,7 +222,7 @@ def handle_search():
                 date_pattern = f"%{query}%"
                 entries = db.query(DailyEntry).filter(
                     DailyEntry.user_id == 1,
-                    DailyEntry.date.cast(db.String).like(date_pattern)
+                    cast(DailyEntry.date, String).like(date_pattern)
                 ).order_by(DailyEntry.date.desc()).all()
         
         # If no date matches, search in notes and priority

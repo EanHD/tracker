@@ -27,8 +27,8 @@ def setup():
     
     provider = Prompt.ask(
         "Choose AI provider",
-        choices=["anthropic", "openai"],
-        default="anthropic"
+        choices=["anthropic", "openai", "openrouter", "local"],
+        default="local"
     )
     
     console.print(f"\nSelected provider: [green]{provider}[/green]")
@@ -38,24 +38,47 @@ def setup():
         console.print("\n[dim]Get your API key from: https://console.anthropic.com/[/dim]")
         api_key = Prompt.ask("Anthropic API key", password=True)
         env_var = "ANTHROPIC_API_KEY"
-    else:
+    elif provider == "openai":
         console.print("\n[dim]Get your API key from: https://platform.openai.com/api-keys[/dim]")
         api_key = Prompt.ask("OpenAI API key", password=True)
         env_var = "OPENAI_API_KEY"
+    elif provider == "openrouter":
+        console.print("\n[dim]Get your API key from: https://openrouter.ai/keys[/dim]")
+        api_key = Prompt.ask("OpenRouter API key", password=True)
+        env_var = "OPENROUTER_API_KEY"
+    else:  # local
+        console.print("\n[dim]Using local AI (Ollama). No API key needed.[/dim]")
+        console.print("[dim]Make sure Ollama is running: http://localhost:11434[/dim]")
+        api_key = None
+        env_var = None
     
-    # Model (optional)
+    # Model configuration
     use_default_model = Confirm.ask("Use default model?", default=True)
     
     if use_default_model:
         model = None
-        model_name = "claude-3-sonnet" if provider == "anthropic" else "gpt-4"
+        if provider == "anthropic":
+            model_name = "claude-3-5-sonnet-20241022"
+        elif provider == "openai":
+            model_name = "gpt-4"
+        elif provider == "openrouter":
+            model_name = "anthropic/claude-3.5-sonnet"
+        else:  # local
+            model_name = "llama3.2:3b"
     else:
         if provider == "anthropic":
             console.print("\n[dim]Available models: claude-3-opus, claude-3-sonnet, claude-3-haiku[/dim]")
-            model = Prompt.ask("Model name", default="claude-3-sonnet-20240229")
-        else:
+            model = Prompt.ask("Model name", default="claude-3-5-sonnet-20241022")
+        elif provider == "openai":
             console.print("\n[dim]Available models: gpt-4, gpt-4-turbo, gpt-3.5-turbo[/dim]")
             model = Prompt.ask("Model name", default="gpt-4")
+        elif provider == "openrouter":
+            console.print("\n[dim]Available models: anthropic/claude-3.5-sonnet, openai/gpt-4, etc.[/dim]")
+            model = Prompt.ask("Model name", default="anthropic/claude-3.5-sonnet")
+        else:  # local
+            console.print("\n[dim]Available models depend on your Ollama installation[/dim]")
+            console.print("[dim]Common: llama3.2:3b, llama3.2:1b, gemma2:2b[/dim]")
+            model = Prompt.ask("Model name", default="llama3.2:3b")
         model_name = model
     
     # Encryption key
@@ -78,25 +101,50 @@ def setup():
     console.print("Add these to your .env file:")
     console.print()
     console.print(f"[cyan]AI_PROVIDER={provider}[/cyan]")
-    console.print(f"[cyan]{env_var}={api_key}[/cyan]")
-    if model:
-        console.print(f"[cyan]AI_MODEL={model}[/cyan]")
+    
+    if api_key:
+        console.print(f"[cyan]{env_var}={api_key}[/cyan]")
+    
+    if provider == "local":
+        console.print(f"[cyan]LOCAL_API_URL=http://localhost:11434/v1[/cyan]")
+        console.print(f"[cyan]LOCAL_MODEL={model or model_name}[/cyan]")
+    elif model:
+        if provider == "anthropic":
+            console.print(f"[cyan]ANTHROPIC_MODEL={model}[/cyan]")
+        elif provider == "openai":
+            console.print(f"[cyan]OPENAI_MODEL={model}[/cyan]")
+        elif provider == "openrouter":
+            console.print(f"[cyan]OPENROUTER_MODEL={model}[/cyan]")
+    
     if not settings.encryption_key:
         console.print(f"[cyan]ENCRYPTION_KEY={encryption_key}[/cyan]")
     
     console.print()
-    console.print("[dim]Or run: echo 'AI_PROVIDER={provider}' >> .env[/dim]")
+    console.print(f"[dim]Or run: echo 'AI_PROVIDER={provider}' >> .env[/dim]")
     console.print()
     
     # Offer to write to .env
     if Confirm.ask("\n💾 Write to .env file now?", default=True):
         try:
             with open(".env", "a") as f:
-                f.write(f"\n# AI Configuration (added {click.DateTime()})\n")
+                from datetime import datetime
+                f.write(f"\n# AI Configuration (added {datetime.now().strftime('%Y-%m-%d %H:%M:%S')})\n")
                 f.write(f"AI_PROVIDER={provider}\n")
-                f.write(f"{env_var}={api_key}\n")
-                if model:
-                    f.write(f"AI_MODEL={model}\n")
+                
+                if api_key:
+                    f.write(f"{env_var}={api_key}\n")
+                
+                if provider == "local":
+                    f.write(f"LOCAL_API_URL=http://localhost:11434/v1\n")
+                    f.write(f"LOCAL_MODEL={model or model_name}\n")
+                elif model:
+                    if provider == "anthropic":
+                        f.write(f"ANTHROPIC_MODEL={model}\n")
+                    elif provider == "openai":
+                        f.write(f"OPENAI_MODEL={model}\n")
+                    elif provider == "openrouter":
+                        f.write(f"OPENROUTER_MODEL={model}\n")
+                
                 if not settings.encryption_key:
                     f.write(f"ENCRYPTION_KEY={encryption_key}\n")
             

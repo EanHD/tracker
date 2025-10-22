@@ -6,11 +6,19 @@ from rich.console import Console
 console = Console()
 
 
-@click.group()
+@click.group(invoke_without_command=True)
+@click.pass_context
 @click.version_option(version="0.1.0")
-def cli():
-    """Tracker - Daily logging app with AI feedback"""
-    pass
+def cli(ctx):
+    """Tracker - Daily logging app with AI feedback
+    
+    Running 'tracker' without arguments launches the interactive TUI.
+    Use 'tracker --help' to see all available commands.
+    """
+    if ctx.invoked_subcommand is None:
+        # No command provided, launch TUI
+        from tracker.cli.commands.tui import tui
+        ctx.invoke(tui)
 
 
 @cli.command()
@@ -70,6 +78,7 @@ from tracker.cli.commands.search import search
 from tracker.cli.commands.server import server
 from tracker.cli.commands.show import show
 from tracker.cli.commands.stats import stats
+from tracker.cli.commands.tui import tui
 
 cli.add_command(new)
 cli.add_command(edit)
@@ -85,6 +94,7 @@ cli.add_command(server)
 cli.add_command(mcp)
 cli.add_command(retry)
 cli.add_command(profile)
+cli.add_command(tui)
 
 
 if __name__ == "__main__":

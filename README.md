@@ -5,12 +5,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Docker](https://img.shields.io/badge/docker-ready-brightgreen.svg)](https://hub.docker.com/r/eanhd/daily-tracker)
 
-A powerful CLI-first daily tracking application with AI-powered insights. Track finances, work patterns, wellbeing, and receive personalized feedback from multiple AI providers.
+A powerful daily tracking application with AI-powered insights. Track finances, work patterns, wellbeing, and receive personalized feedback from multiple AI providers. **Use it your way**: traditional CLI commands, interactive TUI menu, or REST API for custom frontends.
 
 ## ✨ Features
 
 ### Core Functionality
 - 📝 **Rich CLI Interface** - Beautiful terminal UI with Rich library
+- 🎨 **Interactive TUI Mode** - Full-screen menu-driven interface with Textual
 - 🤖 **Multi-Provider AI** - OpenAI, Anthropic, OpenRouter, or Local models
 - 📊 **Comprehensive Tracking** - Finance, work hours, stress, sleep, exercise, social time
 - 🔒 **Privacy-First** - Local SQLite database, no cloud storage
@@ -20,11 +21,16 @@ A powerful CLI-first daily tracking application with AI-powered insights. Track 
 - ✏️ **Review & Edit** - Preview entries before saving, fix mistakes without restarting
 - 🛡️ **Error Recovery** - Invalid input retries instead of crashing
 
-### Interfaces
+### Three Ways to Use Tracker
+1. **CLI Commands** - Fast, scriptable `tracker new`, `tracker show`, etc.
+2. **Interactive TUI** - Menu-driven full-screen interface with `tracker tui`
+3. **REST API Server** - Build custom frontends with `tracker server`
+
+### Additional Interfaces
 - 🌐 **REST API** - FastAPI server with JWT authentication, OpenAPI docs
 - 🔌 **MCP Server** - Model Context Protocol for AI agent integration
 - 🐳 **Docker Ready** - Multi-stage builds, docker-compose orchestration
-- � **CI/CD** - GitHub Actions with automated testing and deployment
+- 🔄 **CI/CD** - GitHub Actions with automated testing and deployment
 
 ### Power User Features
 - ✏️ **Entry Editing** - Modify past entries with audit trail
@@ -84,7 +90,10 @@ tracker onboard
 ### Your First Entry
 
 ```bash
-# Interactive mode (guided prompts)
+# Interactive TUI (default - just run tracker)
+tracker
+
+# Interactive CLI mode (guided prompts)
 tracker new
 
 # Quick mode (command flags)
@@ -96,6 +105,65 @@ tracker show today
 # Check your achievements
 tracker achievements
 ```
+
+## 🎯 Usage Modes
+
+### 1. Interactive TUI (Default - Recommended for Beginners)
+
+Launch the full-screen menu interface (just run `tracker` with no arguments):
+
+```bash
+tracker
+```
+
+Navigate with arrow keys, use hotkeys (`n` for new entry, `v` to view, etc.), and ESC to go back. Perfect for:
+- Creating detailed entries with form validation
+- Browsing your entry history
+- Viewing statistics and achievements
+- Learning available features
+
+[📖 Full TUI Documentation](docs/TUI_MODE.md)
+
+### 2. CLI Commands (Power Users & Automation)
+
+Direct commands for speed and scripting:
+
+```bash
+# Create entries
+tracker new --income 500 --bills 200
+tracker edit today --mood 8
+
+# View data
+tracker show yesterday
+tracker list --days 7
+tracker search "exercise"
+
+# Analytics
+tracker stats --plot
+tracker achievements
+
+# Export
+tracker export --format csv --output data.csv
+```
+
+### 3. Server Mode (Custom Frontends)
+
+Run the REST API server:
+
+```bash
+tracker server --port 5703
+
+# Or with Docker
+docker-compose up -d
+```
+
+Build your own frontend or integrate with other tools:
+- OpenAPI docs at `http://localhost:5703/docs`
+- JWT authentication
+- Full CRUD operations
+- Real-time AI feedback endpoints
+
+[📖 API Documentation](docs/API.md)
 
 ## 📚 Documentation
 

@@ -50,7 +50,7 @@ class ExportService:
             start_date=start_date,
             end_date=end_date,
             limit=10000,  # Get all entries
-            sort_desc=False  # Oldest first for exports
+            order_desc=False  # Oldest first for exports
         )
         
         # Create CSV content
@@ -132,7 +132,7 @@ class ExportService:
             start_date=start_date,
             end_date=end_date,
             limit=10000,  # Get all entries
-            sort_desc=False  # Oldest first for exports
+            order_desc=False  # Oldest first for exports
         )
         
         # Build export data

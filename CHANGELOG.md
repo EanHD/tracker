@@ -272,5 +272,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on submitting changes.
 - **Fixed** for bug fixes
 - **Security** for vulnerability fixes
 
-[Unreleased]: https://github.com/yourusername/tracker/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/yourusername/tracker/releases/tag/v1.0.0
+[Unreleased]: https://github.com/EanHD/tracker/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/EanHD/tracker/releases/tag/v1.0.0

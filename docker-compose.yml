@@ -9,7 +9,7 @@ services:
     container_name: tracker-api
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "5703:5703"
     environment:
       # Application settings
       - DATABASE_URL=sqlite:////home/tracker/.config/tracker/tracker.db
@@ -42,7 +42,7 @@ services:
       - tracker-network
     
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5703/api/v1/health"]
       interval: 30s
       timeout: 10s
       retries: 3

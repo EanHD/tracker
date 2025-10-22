@@ -1,8 +1,12 @@
 # Daily Tracker - API Documentation
 
-**Version:** 1.0.0  
+**Ve### Base URLs
+
+```
+Development: http://localhost:5703/api/v1
+Production: https://your-domain.com/api/v1:** 1.0.0  
 **Last Updated:** October 21, 2025  
-**Base URL:** `http://localhost:8000/api/v1`
+**Base URL:** `http://localhost:5703/api/v1`
 
 ---
 
@@ -42,7 +46,7 @@ The Daily Tracker REST API provides programmatic access to all tracking function
 ### Base URL
 
 ```
-Development: http://localhost:8000/api/v1
+Development: http://localhost:5703/api/v1
 Production:  https://your-domain.com/api/v1
 ```
 
@@ -162,7 +166,7 @@ Authenticate and receive access token.
 **Token Usage:**
 ```bash
 curl -H "Authorization: Bearer eyJhbGc..." \
-  http://localhost:8000/api/v1/entries/
+  http://localhost:5703/api/v1/entries/
 ```
 
 **Errors:**
@@ -209,7 +213,7 @@ List all entries for the authenticated user.
 **Example:**
 ```bash
 curl -H "Authorization: Bearer TOKEN" \
-  "http://localhost:8000/api/v1/entries/?limit=10"
+  "http://localhost:5703/api/v1/entries/?limit=10"
 ```
 
 ---
@@ -251,7 +255,7 @@ Retrieve a specific entry by date.
 **Example:**
 ```bash
 curl -H "Authorization: Bearer TOKEN" \
-  http://localhost:8000/api/v1/entries/2025-10-21
+  http://localhost:5703/api/v1/entries/2025-10-21
 ```
 
 ---
@@ -318,7 +322,7 @@ curl -X POST \
   -H "Authorization: Bearer TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"date":"2025-10-21","stress_level":3}' \
-  http://localhost:8000/api/v1/entries/
+  http://localhost:5703/api/v1/entries/
 ```
 
 ---
@@ -372,7 +376,7 @@ curl -X PATCH \
   -H "Authorization: Bearer TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"stress_level":6}' \
-  http://localhost:8000/api/v1/entries/2025-10-21
+  http://localhost:5703/api/v1/entries/2025-10-21
 ```
 
 ---
@@ -396,7 +400,7 @@ Delete an entry.
 ```bash
 curl -X DELETE \
   -H "Authorization: Bearer TOKEN" \
-  http://localhost:8000/api/v1/entries/2025-10-21
+  http://localhost:5703/api/v1/entries/2025-10-21
 ```
 
 ---
@@ -430,7 +434,7 @@ Retrieve AI-generated feedback for an entry.
 **Example:**
 ```bash
 curl -H "Authorization: Bearer TOKEN" \
-  http://localhost:8000/api/v1/feedback/2025-10-21
+  http://localhost:5703/api/v1/feedback/2025-10-21
 ```
 
 ---
@@ -464,7 +468,7 @@ Request new AI feedback for an entry.
 ```bash
 curl -X POST \
   -H "Authorization: Bearer TOKEN" \
-  http://localhost:8000/api/v1/feedback/2025-10-21/regenerate
+  http://localhost:5703/api/v1/feedback/2025-10-21/regenerate
 ```
 
 ---
@@ -521,7 +525,7 @@ Get aggregated statistics for the authenticated user.
 **Example:**
 ```bash
 curl -H "Authorization: Bearer TOKEN" \
-  "http://localhost:8000/api/v1/stats/?days=30"
+  "http://localhost:5703/api/v1/stats/?days=30"
 ```
 
 ---
@@ -551,7 +555,7 @@ date,income,bills,food,hours_worked,stress_level,hours_exercise,hours_sleep,hour
 **Example:**
 ```bash
 curl -H "Authorization: Bearer TOKEN" \
-  "http://localhost:8000/api/v1/export/csv?start_date=2025-10-01" \
+  "http://localhost:5703/api/v1/export/csv?start_date=2025-10-01" \
   -o tracker_data.csv
 ```
 
@@ -607,7 +611,7 @@ Export entries as JSON file.
 **Example:**
 ```bash
 curl -H "Authorization: Bearer TOKEN" \
-  http://localhost:8000/api/v1/export/json \
+  http://localhost:5703/api/v1/export/json \
   -o tracker_backup.json
 ```
 
@@ -646,7 +650,7 @@ Get export statistics and preview.
 **Example:**
 ```bash
 curl -H "Authorization: Bearer TOKEN" \
-  http://localhost:8000/api/v1/export/stats
+  http://localhost:5703/api/v1/export/stats
 ```
 
 ---
@@ -823,7 +827,7 @@ class TrackerClient:
         return response.content
 
 # Usage
-client = TrackerClient("http://localhost:8000/api/v1", "your-token-here")
+client = TrackerClient("http://localhost:5703/api/v1", "your-token-here")
 
 # Create entry
 entry = client.create_entry(
@@ -896,7 +900,7 @@ class TrackerClient {
 }
 
 // Usage
-const client = new TrackerClient('http://localhost:8000/api/v1', 'your-token');
+const client = new TrackerClient('http://localhost:5703/api/v1', 'your-token');
 
 // Create entry
 const entry = await client.createEntry('2025-10-21', {
@@ -916,7 +920,7 @@ console.log(`Average stress: ${stats.work.avg_stress_level}`);
 
 ```bash
 #!/bin/bash
-BASE_URL="http://localhost:8000/api/v1"
+BASE_URL="http://localhost:5703/api/v1"
 
 # 1. Login
 TOKEN=$(curl -s -X POST "$BASE_URL/auth/login" \
@@ -967,8 +971,8 @@ curl "$BASE_URL/export/csv" \
 
 FastAPI provides automatic interactive documentation:
 
-- **Swagger UI**: `http://localhost:8000/docs`
-- **ReDoc**: `http://localhost:8000/redoc`
+- **Swagger UI**: `http://localhost:5703/docs`
+- **ReDoc**: `http://localhost:5703/redoc`
 
 These interfaces allow you to:
 - Explore all endpoints

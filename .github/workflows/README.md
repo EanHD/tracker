@@ -158,8 +158,8 @@ git push origin v1.0.0
 Add to README.md:
 
 ```markdown
-![CI/CD](https://github.com/yourusername/tracker/workflows/CI/CD%20Pipeline/badge.svg)
-[![codecov](https://codecov.io/gh/yourusername/tracker/branch/main/graph/badge.svg)](https://codecov.io/gh/yourusername/tracker)
+![CI/CD](https://github.com/EanHD/tracker/workflows/CI/CD%20Pipeline/badge.svg)
+[![codecov](https://codecov.io/gh/EanHD/tracker/branch/main/graph/badge.svg)](https://codecov.io/gh/EanHD/tracker)
 ```
 
 ## Best Practices

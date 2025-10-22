@@ -165,8 +165,8 @@ This document tracks the implementation progress of the daily financial logging 
 - `tracker server` command - Start API server
 - `--host` and `--port` flags for configuration
 - `--reload` flag for development auto-reload
-- Server accessible at `http://localhost:8000`
-- API docs at `http://localhost:8000/docs`
+- Server accessible at `http://localhost:5703`
+- API docs at `http://localhost:5703/docs`
 
 **Production Infrastructure** ✅:
 - `src/api/middleware.py` - Logging and error handling middleware

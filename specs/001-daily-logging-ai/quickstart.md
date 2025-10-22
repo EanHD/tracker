@@ -188,7 +188,7 @@ tracker search "bills" --from 2025-10-01
 tracker api serve --dev
 
 # Production mode
-tracker api serve --host 0.0.0.0 --port 8000
+tracker api serve --host 0.0.0.0 --port 5703
 
 # Background mode
 tracker api serve --daemon
@@ -404,7 +404,7 @@ ai:
 # API Server
 api:
   host: localhost
-  port: 8000
+  port: 5703
   jwt_secret: auto-generated-secret
   token_expiry_days: 90
 
@@ -448,7 +448,7 @@ export OPENAI_API_KEY=your-key-here
 
 # API Server
 export API_HOST=0.0.0.0
-export API_PORT=8000
+export API_PORT=5703
 export JWT_SECRET=your-secret-here
 
 # Encryption

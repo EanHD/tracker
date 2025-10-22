@@ -61,3 +61,14 @@ Thumbs.db
 
 # Project specific
 ~/.config/tracker/
+
+#AI
+CONFIGURATION_SUMMARY.md
+REMAINING_TASKS.md
+PRE_RELEASE_VERIFICATION.md
+PROJECT_COMPLETE.md
+IMPLEMENTATION_STATUS.md
+
+specs/
+.specify/
+tests/

@@ -57,14 +57,14 @@ RUN mkdir -p /home/tracker/.config/tracker
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health').read()"
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5703/api/v1/health').read()"
 
 # Expose port
-EXPOSE 8000
+EXPOSE 5703
 
 # Default command: run API server
 CMD ["uvicorn", "tracker.api.main:app", \
      "--host", "0.0.0.0", \
-     "--port", "8000", \
+     "--port", "5703", \
      "--workers", "2", \
      "--log-level", "info"]

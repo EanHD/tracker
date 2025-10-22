@@ -40,7 +40,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/tracker.git
+git clone https://github.com/EanHD/tracker.git
 cd tracker
 
 # Create virtual environment and install dependencies
@@ -51,6 +51,36 @@ uv pip install -e .
 # Initialize the database
 python scripts/init_db.py
 ```
+
+### Security Configuration
+
+Before using the API server or MCP server, you need to set secure secrets in your `.env` file.
+
+#### Generate Secure Secrets
+
+```bash
+# Generate a secure JWT secret (for API authentication)
+openssl rand -hex 32
+
+# Generate a secure encryption key (for database encryption)
+openssl rand -hex 32
+```
+
+Copy these values and update your `.env` file:
+
+```bash
+# Example .env configuration
+JWT_SECRET=your-generated-jwt-secret-here
+ENCRYPTION_KEY=your-generated-encryption-key-here
+```
+
+**Important Security Notes:**
+
+- 🔒 **Never commit `.env` to git** - It's already in `.gitignore`
+- 🔑 **Use different secrets for each environment** (dev, production)
+- ⚠️ **Never change ENCRYPTION_KEY after encrypting data** - Will corrupt your database!
+- 🔄 **Rotate JWT_SECRET periodically** (every 90 days) for better security
+- 📝 **Store production secrets securely** - Use environment variables or secret managers
 
 ### Initial Setup
 
@@ -386,7 +416,7 @@ Start the FastAPI server for programmatic access.
 tracker server
 
 # Production mode
-tracker server --host 0.0.0.0 --port 8000
+tracker server --host 0.0.0.0 --port 5703
 
 # Custom configuration
 tracker server --host 127.0.0.1 --port 5000 --no-reload
@@ -397,8 +427,8 @@ tracker server --host 127.0.0.1 --port 5000 --no-reload
 - `--port PORT` - Port number (default: 8000)
 - `--reload` / `--no-reload` - Auto-reload on code changes
 
-Access the API at `http://localhost:8000/api/v1/`  
-Interactive docs at `http://localhost:8000/docs`
+Access the API at `http://localhost:5703/api/v1/`  
+Interactive docs at `http://localhost:5703/docs`
 
 ### MCP Integration
 
@@ -439,7 +469,7 @@ If you want fresh AI insights on an existing entry:
 tracker edit 2025-10-21 --regenerate-feedback
 
 # Or manually request new feedback via API
-curl -X POST http://localhost:8000/api/v1/feedback/2025-10-21/regenerate \
+curl -X POST http://localhost:5703/api/v1/feedback/2025-10-21/regenerate \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -451,7 +481,7 @@ The REST API enables bulk operations:
 import requests
 
 # Authenticate
-response = requests.post("http://localhost:8000/api/v1/auth/login", json={
+response = requests.post("http://localhost:5703/api/v1/auth/login", json={
     "username": "your_username",
     "password": "your_password"
 })
@@ -461,14 +491,14 @@ headers = {"Authorization": f"Bearer {token}"}
 # Create multiple entries
 for date, data in entries_dict.items():
     requests.post(
-        "http://localhost:8000/api/v1/entries/",
+        "http://localhost:5703/api/v1/entries/",
         json=data,
         headers=headers
     )
 
 # Export all data
 response = requests.get(
-    "http://localhost:8000/api/v1/export/json",
+    "http://localhost:5703/api/v1/export/json",
     headers=headers
 )
 with open("backup.json", "wb") as f:
@@ -692,7 +722,7 @@ A: Contributions welcome! See [CONTRIBUTING.md](../CONTRIBUTING.md) for guidelin
 ## Getting Help
 
 - **Documentation**: Check `docs/` folder
-- **API Docs**: Run `tracker server` and visit `http://localhost:8000/docs`
+- **API Docs**: Run `tracker server` and visit `http://localhost:5703/docs`
 - **Issues**: Report bugs on GitHub
 - **Discussions**: Join the community on GitHub Discussions
 

@@ -1,9 +1,9 @@
 # Daily Tracker - Personal Analytics with AI Insights
 
-[![CI/CD](https://github.com/yourusername/tracker/workflows/CI%2FCD%20Pipeline/badge.svg)](https://github.com/yourusername/tracker/actions)
+[![CI/CD](https://github.com/EanHD/tracker/workflows/CI%2FCD%20Pipeline/badge.svg)](https://github.com/EanHD/tracker/actions)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Docker](https://img.shields.io/badge/docker-ready-brightgreen.svg)](https://hub.docker.com/r/yourusername/daily-tracker)
+[![Docker](https://img.shields.io/badge/docker-ready-brightgreen.svg)](https://hub.docker.com/r/eanhd/daily-tracker)
 
 A powerful CLI-first daily tracking application with AI-powered insights. Track finances, work patterns, wellbeing, and receive personalized feedback from multiple AI providers.
 
@@ -44,7 +44,7 @@ A powerful CLI-first daily tracking application with AI-powered insights. Track 
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Clone repository
-git clone https://github.com/yourusername/tracker.git
+git clone https://github.com/EanHD/tracker.git
 cd tracker
 
 # Setup environment
@@ -65,7 +65,7 @@ cp .env.example .env
 docker-compose up -d
 
 # Test API
-curl http://localhost:8000/api/v1/health
+curl http://localhost:5703/api/v1/health
 ```
 
 ### Configuration
@@ -161,7 +161,7 @@ tracker config set ai_provider openai
 tracker onboard         # Run setup wizard
 
 # Servers
-tracker server          # Start REST API (port 8000)
+tracker server          # Start REST API (port 5703)
 tracker mcp            # Start MCP server (stdio)
 ```
 
@@ -243,7 +243,7 @@ mypy src/tracker/
 tracker new  # Uses local code
 
 # API development (with hot reload)
-uvicorn tracker.api.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn tracker.api.main:app --reload --host 0.0.0.0 --port 5703
 
 # MCP development
 tracker mcp --log-file /tmp/mcp.log
@@ -362,8 +362,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## 📧 Contact
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/tracker/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/tracker/discussions)
+- **Issues**: [GitHub Issues](https://github.com/EanHD/tracker/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/EanHD/tracker/discussions)
 - **Email**: your.email@example.com
 
 ---

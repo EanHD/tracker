@@ -72,7 +72,7 @@ tracker new  # Start tracking!
 ### 2. Deploy with Docker
 ```bash
 docker-compose up -d
-curl http://localhost:8000/api/v1/health
+curl http://localhost:5703/api/v1/health
 ```
 
 ### 3. Deploy to Production

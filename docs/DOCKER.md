@@ -11,7 +11,7 @@
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/tracker.git
+git clone https://github.com/EanHD/tracker.git
 cd tracker
 
 # Copy environment template
@@ -30,7 +30,7 @@ docker-compose ps
 docker-compose logs -f tracker-api
 
 # Test API
-curl http://localhost:8000/api/v1/health
+curl http://localhost:5703/api/v1/health
 ```
 
 ### 2. Build Docker Image Only
@@ -42,7 +42,7 @@ docker build -t tracker:latest .
 # Run container
 docker run -d \
   --name tracker-api \
-  -p 8000:8000 \
+  -p 8000:5703 \
   -e OPENAI_API_KEY="sk-..." \
   -v tracker-data:/home/tracker/.config/tracker \
   tracker:latest
@@ -91,7 +91,10 @@ Total: ~230 MB
 The main API service running FastAPI with uvicorn.
 
 **Ports:**
-- `8000:8000` - API endpoint
+#### Ports
+
+- `5703:5703` - API endpoint
+- `8001:8001` - MCP server (if enabled)
 
 **Environment Variables:**
 - `AI_PROVIDER` - AI service (openai, anthropic, openrouter, local)
@@ -279,7 +282,7 @@ services:
     image: your-registry.com/tracker:1.0.0
     restart: always
     ports:
-      - "127.0.0.1:8000:8000"  # Bind to localhost only
+      - "127.0.0.1:5703:5703"  # Bind to localhost only
     environment:
       - AI_PROVIDER=${AI_PROVIDER}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
@@ -409,7 +412,7 @@ Schedule with cron:
 docker-compose ps
 
 # Manual health check
-curl http://localhost:8000/api/v1/health
+curl http://localhost:5703/api/v1/health
 
 # Container health status
 docker inspect tracker-api --format='{{.State.Health.Status}}'
@@ -477,7 +480,7 @@ services:
       - LOG_LEVEL=debug
     command: uvicorn tracker.api.main:app \
       --host 0.0.0.0 \
-      --port 8000 \
+      --port 5703 \
       --reload \
       --log-level debug
 ```

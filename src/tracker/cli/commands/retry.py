@@ -1,9 +1,11 @@
 """Retry AI feedback generation for an entry"""
 
+from datetime import date, datetime, timedelta
+
 import click
 from rich.console import Console
 
-from tracker.core.database import get_db
+from tracker.core.database import SessionLocal
 from tracker.services.entry_service import EntryService
 from tracker.services.feedback_service import FeedbackService
 
@@ -11,28 +13,48 @@ console = Console()
 
 
 @click.command()
-@click.argument("date")
-def retry(date: str):
+@click.argument("date_arg", required=False)
+def retry(date_arg):
     """
     Retry AI feedback generation for an entry
     
-    DATE: The date of the entry (YYYY-MM-DD or today/yesterday)
+    DATE can be:
+    - YYYY-MM-DD format (e.g., 2025-10-21)
+    - 'today' (default)
+    - 'yesterday'
+    - Relative like '-1', '-2' for days ago
     
     Examples:
         tracker retry today
         tracker retry 2025-10-21
         tracker retry yesterday
+        tracker retry -1
     """
     
-    db = get_db()
+    # Parse date argument
+    try:
+        entry_date = _parse_date_arg(date_arg)
+    except ValueError as e:
+        console.print(f"[red]Error: {e}[/red]")
+        return
+    
+    db = SessionLocal()
     
     try:
         # Get the entry
         entry_service = EntryService(db)
-        entry = entry_service.get_entry_by_date_string(date)
+        
+        # Get default user
+        user = entry_service.get_default_user()
+        if not user:
+            console.print("[red]Error: No user found. Please run 'tracker init' first.[/red]")
+            return
+        
+        # Fetch entry
+        entry = entry_service.get_entry_by_date(user.id, entry_date)
         
         if not entry:
-            console.print(f"[red]Error: No entry found for {date}[/red]")
+            console.print(f"[red]Error: No entry found for {entry_date}[/red]")
             return
         
         console.print(f"\n[cyan]Regenerating AI feedback for {entry.date}...[/cyan]")
@@ -66,3 +88,27 @@ def retry(date: str):
         console.print(f"[red]Error: {e}[/red]")
     finally:
         db.close()
+
+
+def _parse_date_arg(date_arg: str) -> date:
+    """Parse date argument into date object"""
+    
+    if not date_arg or date_arg.lower() == "today":
+        return date.today()
+    
+    if date_arg.lower() == "yesterday":
+        return date.today() - timedelta(days=1)
+    
+    # Check if it's a relative date like -1, -2
+    if date_arg.startswith("-") and date_arg[1:].isdigit():
+        days_ago = int(date_arg[1:])
+        return date.today() - timedelta(days=days_ago)
+    
+    # Try parsing as YYYY-MM-DD
+    try:
+        return datetime.strptime(date_arg, "%Y-%m-%d").date()
+    except ValueError:
+        raise ValueError(
+            f"Invalid date format: {date_arg}. "
+            "Use YYYY-MM-DD, 'today', 'yesterday', or '-N' for N days ago."
+        )

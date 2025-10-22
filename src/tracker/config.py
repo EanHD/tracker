@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     openrouter_api_key: Optional[str] = Field(default=None, description="OpenRouter API key")
     local_api_url: str = Field(default="http://localhost:1234/v1", description="Local API URL (Ollama/LM Studio)")
     ai_model: Optional[str] = Field(default=None, description="AI model name")
+    local_model: Optional[str] = Field(default=None, description="Local model name (for local provider)")
+
 
     # API Server
     api_host: str = Field(default="localhost", description="API server host")

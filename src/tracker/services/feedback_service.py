@@ -234,20 +234,24 @@ class FeedbackService:
             ValueError: If AI configuration is missing or invalid
         """
         import os
-        from tracker.config import AI_PROVIDER, AI_API_KEY, AI_MODEL, LOCAL_API_URL
+        from tracker.config import settings
         
         # Validate config
-        provider = AI_PROVIDER or os.getenv("AI_PROVIDER", "local")
+        provider = settings.ai_provider or "local"
         
         if provider != "local":
-            api_key = AI_API_KEY or os.getenv("AI_API_KEY")
+            api_key = settings.get_ai_api_key()
             if not api_key:
                 raise ValueError(f"AI_API_KEY required for provider '{provider}'")
         else:
             api_key = None
         
-        model = AI_MODEL or os.getenv("AI_MODEL")
-        local_api_url = LOCAL_API_URL or os.getenv("LOCAL_API_URL", "http://localhost:11434/v1")
+        # Get model - check both AI_MODEL and provider-specific env vars
+        model = settings.ai_model
+        if not model and provider == "local":
+            model = settings.local_model or "local-model"
+        
+        local_api_url = settings.local_api_url or "http://localhost:11434/v1"
         
         # Check if feedback exists
         if not regenerate:

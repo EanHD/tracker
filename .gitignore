@@ -74,6 +74,7 @@ TUI_IMPLEMENTATION.md
 MULTI_MODE_SUMMARY.md
 COMMIT_MESSAGE.txt
 demo_tui.sh
+verify_implementation.sh
 
 specs/
 .specify/

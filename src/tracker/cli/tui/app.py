@@ -174,7 +174,7 @@ def show_entry_detail(entry):
             console.print()
             feedback_text = f"""[bold cyan]💬 Feedback[/bold cyan]
 
-{feedback.feedback_text}
+{feedback.content}
 
 [dim]Generated: {feedback.created_at.strftime('%Y-%m-%d %H:%M')}[/dim]
 """

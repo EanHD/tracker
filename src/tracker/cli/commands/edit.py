@@ -227,54 +227,59 @@ def prompt_for_updates(entry) -> Optional[EntryUpdate]:
     updates = {}
     
     # Financial fields
-    cash = prompt_decimal("Cash on hand", default=str(entry.cash_on_hand) if entry.cash_on_hand is not None else None)
+    console.print("[bold cyan]💰 Financial[/bold cyan]")
+    cash = prompt_decimal("Cash on hand: $", default=str(entry.cash_on_hand) if entry.cash_on_hand is not None else None)
     if cash != entry.cash_on_hand:
         updates['cash_on_hand'] = cash
     
-    bank = prompt_decimal("Bank balance", default=str(entry.bank_balance) if entry.bank_balance is not None else None)
+    bank = prompt_decimal("Bank balance: $", default=str(entry.bank_balance) if entry.bank_balance is not None else None)
     if bank != entry.bank_balance:
         updates['bank_balance'] = bank
     
-    income = prompt_decimal("Income today", default=str(entry.income_today))
+    income = prompt_decimal("Income today: $", default=str(entry.income_today))
     if income != entry.income_today:
         updates['income_today'] = income
     
-    bills = prompt_decimal("Bills due today", default=str(entry.bills_due_today))
+    bills = prompt_decimal("Bills due today: $", default=str(entry.bills_due_today))
     if bills != entry.bills_due_today:
         updates['bills_due_today'] = bills
     
-    debts = prompt_decimal("Total debts", default=str(entry.debts_total) if entry.debts_total is not None else None)
+    debts = prompt_decimal("Total debts: $", default=str(entry.debts_total) if entry.debts_total is not None else None)
     if debts != entry.debts_total:
         updates['debts_total'] = debts
     
     # Work fields
-    hours = prompt_decimal("Hours worked", default=str(entry.hours_worked))
+    console.print("\n[bold cyan]💼 Work[/bold cyan]")
+    hours = prompt_decimal("Hours worked: ", default=str(entry.hours_worked))
     if hours != entry.hours_worked:
         updates['hours_worked'] = hours
     
-    side = prompt_decimal("Side income", default=str(entry.side_income))
+    side = prompt_decimal("Side income: $", default=str(entry.side_income))
     if side != entry.side_income:
         updates['side_income'] = side
     
     # Spending fields
-    food = prompt_decimal("Food spent", default=str(entry.food_spent))
+    console.print("\n[bold cyan]🛒 Spending[/bold cyan]")
+    food = prompt_decimal("Food spent: $", default=str(entry.food_spent))
     if food != entry.food_spent:
         updates['food_spent'] = food
     
-    gas = prompt_decimal("Gas spent", default=str(entry.gas_spent))
+    gas = prompt_decimal("Gas spent: $", default=str(entry.gas_spent))
     if gas != entry.gas_spent:
         updates['gas_spent'] = gas
     
     # Wellbeing fields
-    stress = prompt_integer_range("Stress level", default=str(entry.stress_level), min_val=1, max_val=10)
+    console.print("\n[bold cyan]🧘 Wellbeing[/bold cyan]")
+    stress = prompt_integer_range("Stress level (1-10): ", default=str(entry.stress_level), min_val=1, max_val=10)
     if stress != entry.stress_level:
         updates['stress_level'] = stress
     
-    priority = prompt_text("Priority", default=entry.priority or "")
+    priority = prompt_text("Priority: ", default=entry.priority or "")
     if priority != (entry.priority or ""):
         updates['priority'] = priority if priority else None
     
-    notes = prompt_text("Journal (how was your day?)", default=entry.notes or "", multiline=False)
+    console.print("\n[bold cyan]📓 Journal[/bold cyan]")
+    notes = prompt_text("How was your day?: ", default=entry.notes or "", multiline=False)
     if notes != (entry.notes or ""):
         updates['notes'] = notes if notes else None
     

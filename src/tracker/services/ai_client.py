@@ -72,25 +72,46 @@ Wellbeing:
 
 Generate supportive, empathetic motivational feedback for this daily entry.
 
-Guidelines:
+## Content Guidelines:
 - Be warm, supportive, and genuinely encouraging
 - Acknowledge challenges without toxic positivity
 - Celebrate wins, even small ones
 - Provide perspective on their financial progress
 - Keep tone empathetic and non-judgmental
 - Focus on effort and resilience, not just outcomes
-- Be concise (2-3 paragraphs max)
 - End with something uplifting or actionable
+
+## Structure & Formatting:
+- Write in 2-4 well-structured paragraphs
+- Start each paragraph on a new line for readability
+- Use natural paragraph breaks—don't run thoughts together
+- Keep paragraphs focused: one main idea per paragraph
+- Use **bold** sparingly for key encouragement (1-2 times max)
+- Write complete, flowing sentences—avoid bullet points or lists
+- Use conversational tone with occasional em-dashes for emphasis
+
+## Suggested Structure:
+1. **Acknowledge & Validate** - Reflect on what they did today (good and hard)
+2. **Perspective & Insight** - Connect to patterns, progress, or character
+3. **Forward Looking** - Encouragement with actionable insight or gentle reminder
+
+## Voice & Tone:
+- Sound like a wise, supportive friend who knows their journey
+- Be real—don't minimize struggles, but help them see their strength
+- Balance honesty with hope
+- Use "you" language to make it personal
 """
 
         if character_sheet:
             prompt += """
-- Use their character profile to make feedback personal and relevant
-- Reference their patterns, goals, and preferences when appropriate
-- Acknowledge their progress toward stated goals
+## Using Character Profile:
+- Reference their known patterns (work style, stress triggers, money wins)
+- Acknowledge progress toward stated goals
+- Make connections between today's entry and their larger journey
+- Show you remember their context (e.g., "You mentioned wanting to...")
 """
 
-        prompt += "\nGenerate the motivational feedback now:"
+        prompt += "\n\nGenerate the motivational feedback now (plain text, no markdown formatting):"
 
         return prompt
 

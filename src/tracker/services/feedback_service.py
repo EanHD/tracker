@@ -233,16 +233,19 @@ class FeedbackService:
         Raises:
             ValueError: If AI configuration is missing or invalid
         """
-        import os
         from tracker.config import settings
         
         # Validate config
         provider = settings.ai_provider or "local"
         
+        # Check API key for non-local providers
         if provider != "local":
             api_key = settings.get_ai_api_key()
             if not api_key:
-                raise ValueError(f"AI_API_KEY required for provider '{provider}'")
+                raise ValueError(
+                    f"API key required for provider '{provider}'.\n"
+                    f"Set {provider.upper()}_API_KEY in your .env file or run: tracker config setup"
+                )
         else:
             api_key = None
         
@@ -250,6 +253,11 @@ class FeedbackService:
         model = settings.ai_model
         if provider == "local":
             model = settings.local_model or model
+            if not model:
+                raise ValueError(
+                    "LOCAL_MODEL not configured.\n"
+                    "Set LOCAL_MODEL in your .env file or run: tracker config setup"
+                )
         elif provider == "anthropic":
             model = settings.anthropic_model or model
         elif provider == "openai":
@@ -266,11 +274,31 @@ class FeedbackService:
                 return existing
         
         # Generate or regenerate
-        return self.regenerate_feedback(
-            entry_id=entry_id,
-            provider=provider,
-            api_key=api_key,
-            model=model,
-            local_api_url=local_api_url
-        )
+        try:
+            return self.regenerate_feedback(
+                entry_id=entry_id,
+                provider=provider,
+                api_key=api_key,
+                model=model,
+                local_api_url=local_api_url
+            )
+        except ValueError:
+            # Re-raise configuration errors
+            raise
+        except Exception as e:
+            # Wrap other errors with helpful context
+            error_msg = str(e)
+            if "404" in error_msg or "not_found" in error_msg:
+                raise ValueError(
+                    f"Model '{model}' not found for provider '{provider}'.\n"
+                    f"Check your model name or run: tracker config setup"
+                )
+            elif "401" in error_msg or "authentication" in error_msg.lower():
+                raise ValueError(
+                    f"Authentication failed for provider '{provider}'.\n"
+                    f"Check your API key or run: tracker config setup"
+                )
+            else:
+                # Re-raise original exception
+                raise
 

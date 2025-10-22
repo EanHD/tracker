@@ -8,11 +8,29 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+def get_config_dir() -> Path:
+    """Get the config directory path"""
+    config_dir = Path.home() / ".config" / "tracker"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    return config_dir
+
+
+def get_env_file_path() -> Path:
+    """Get the .env file path"""
+    # Check if .env exists in current directory (for development)
+    local_env = Path(".env")
+    if local_env.exists() and local_env.is_file():
+        return local_env
+    
+    # Otherwise use config directory
+    return get_config_dir() / ".env"
+
+
 class Settings(BaseSettings):
     """Application settings"""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=str(get_env_file_path()),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",

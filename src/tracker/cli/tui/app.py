@@ -46,17 +46,141 @@ def handle_new_entry():
 
 def handle_view_entries():
     """Handle viewing entries"""
+    from datetime import date, timedelta
+    from tracker.core.database import SessionLocal
+    from tracker.services.entry_service import EntryService
+    from rich.table import Table
+    
     console.print("\n[bold cyan]👁️  View Entries[/bold cyan]\n")
     
-    from tracker.cli.commands.list import list as list_cmd
-    from click.testing import CliRunner
+    with SessionLocal() as db:
+        service = EntryService(db)
+        end_date = date.today()
+        start_date = end_date - timedelta(days=30)
+        
+        entries = service.list_entries(
+            user_id=1,
+            start_date=start_date,
+            end_date=end_date
+        )
+        
+        if not entries:
+            console.print("[yellow]No entries found in the last 30 days[/yellow]\n")
+            console.print("[dim]Press Enter to continue...[/dim]")
+            input()
+            return
+        
+        # Display entries in a numbered list
+        table = Table(show_header=True, header_style="bold cyan")
+        table.add_column("#", style="dim", width=4)
+        table.add_column("Date", width=12)
+        table.add_column("Income", justify="right", width=10)
+        table.add_column("Expenses", justify="right", width=10)
+        table.add_column("Balance", justify="right", width=10)
+        table.add_column("Stress", justify="center", width=8)
+        table.add_column("Priority", width=25)
+        
+        for idx, entry in enumerate(entries, 1):
+            total_income = entry.income_today + entry.side_income
+            total_expenses = entry.bills_due_today + entry.food_spent + entry.gas_spent
+            balance = total_income - total_expenses
+            
+            # Color code balance
+            balance_color = "green" if balance >= 0 else "red"
+            balance_str = f"[{balance_color}]${balance:.2f}[/]"
+            
+            # Color code stress
+            stress = entry.stress_level
+            stress_color = "green" if stress <= 3 else "yellow" if stress <= 6 else "red"
+            stress_str = f"[{stress_color}]{stress}/10[/]"
+            
+            table.add_row(
+                str(idx),
+                str(entry.date),
+                f"${total_income:.2f}",
+                f"${total_expenses:.2f}",
+                balance_str,
+                stress_str,
+                entry.priority or "[dim]none[/dim]"
+            )
+        
+        console.print(table)
+        console.print()
+        
+        # Ask if user wants to view details
+        choice = Prompt.ask(
+            "Enter entry number to view details (or press Enter to go back)",
+            default=""
+        )
+        
+        if choice and choice.isdigit():
+            idx = int(choice)
+            if 1 <= idx <= len(entries):
+                show_entry_detail(entries[idx - 1])
+            else:
+                console.print("[red]Invalid entry number[/red]")
+                console.print("\n[dim]Press Enter to continue...[/dim]")
+                input()
+        
+
+def show_entry_detail(entry):
+    """Show detailed view of an entry"""
+    from tracker.core.database import SessionLocal
+    from tracker.services.feedback_service import FeedbackService
+    from rich.panel import Panel
     
-    runner = CliRunner()
-    result = runner.invoke(list_cmd, ['--days', '30'], catch_exceptions=False)
+    console.clear()
+    console.print()
     
-    # Print the output
-    if result.output:
-        print(result.output)
+    # Calculate totals
+    total_income = entry.income_today + entry.side_income
+    total_expenses = entry.bills_due_today + entry.food_spent + entry.gas_spent
+    balance = total_income - total_expenses
+    
+    # Build detail view
+    detail = f"""[bold cyan]📅 Entry for {entry.date}[/bold cyan]
+
+[bold]💰 Financial Summary[/bold]
+  Income Today:    ${entry.income_today:.2f}
+  Side Income:     ${entry.side_income:.2f}
+  ─────────────────────────────
+  Total Income:    [green]${total_income:.2f}[/green]
+  
+  Bills Due:       ${entry.bills_due_today:.2f}
+  Food Spent:      ${entry.food_spent:.2f}
+  Gas Spent:       ${entry.gas_spent:.2f}
+  ─────────────────────────────
+  Total Expenses:  [red]${total_expenses:.2f}[/red]
+  
+  Net Balance:     {'[green]' if balance >= 0 else '[red]'}${balance:.2f}[/]
+
+[bold]📊 Work & Wellbeing[/bold]
+  Hours Worked:    {entry.hours_worked}
+  Stress Level:    {entry.stress_level}/10
+  Priority:        {entry.priority or '[dim]none[/dim]'}
+
+[bold]📝 Notes[/bold]
+{entry.notes or '[dim]No notes for this day[/dim]'}
+"""
+    
+    console.print(Panel(detail, border_style="cyan", padding=(1, 2)))
+    
+    # Get AI feedback if available
+    with SessionLocal() as db:
+        feedback_service = FeedbackService(db)
+        feedback = feedback_service.get_feedback(entry.id)
+        
+        if feedback:
+            console.print()
+            feedback_text = f"""[bold cyan]💬 Feedback[/bold cyan]
+
+{feedback.feedback_text}
+
+[dim]Generated: {feedback.created_at.strftime('%Y-%m-%d %H:%M')}[/dim]
+"""
+            console.print(Panel(feedback_text, border_style="blue", padding=(1, 2)))
+        else:
+            console.print("\n[dim]No AI feedback available for this entry[/dim]")
     
     console.print("\n[dim]Press Enter to continue...[/dim]")
     input()
@@ -64,22 +188,98 @@ def handle_view_entries():
 
 def handle_search():
     """Handle search"""
+    from datetime import datetime
+    from tracker.core.database import SessionLocal
+    from tracker.services.history_service import HistoryService
+    from tracker.core.models import DailyEntry
+    from rich.table import Table
+    
     console.print("\n[bold cyan]🔍 Search Entries[/bold cyan]")
-    query = Prompt.ask("Enter search term")
+    query = Prompt.ask("Enter search term (date, text, or number)")
     
-    if query:
-        from tracker.cli.commands.search import search as search_cmd
-        from click.testing import CliRunner
-        
-        runner = CliRunner()
-        result = runner.invoke(search_cmd, [query], catch_exceptions=False)
-        
-        # Print the output
-        if result.output:
-            print(result.output)
+    if not query:
+        return
     
-    console.print("\n[dim]Press Enter to continue...[/dim]")
-    input()
+    with SessionLocal() as db:
+        # Try to search by date first
+        entries = []
+        
+        # Check if it's a date search (YYYY-MM-DD or partial)
+        try:
+            # Try full date
+            search_date = datetime.strptime(query, "%Y-%m-%d").date()
+            entry = db.query(DailyEntry).filter(
+                DailyEntry.user_id == 1,
+                DailyEntry.date == search_date
+            ).first()
+            if entry:
+                entries = [entry]
+        except ValueError:
+            # Try partial date matching (like "10-21" or "21")
+            if query.replace("-", "").isdigit():
+                # Search dates containing this pattern
+                date_pattern = f"%{query}%"
+                entries = db.query(DailyEntry).filter(
+                    DailyEntry.user_id == 1,
+                    DailyEntry.date.cast(db.String).like(date_pattern)
+                ).order_by(DailyEntry.date.desc()).all()
+        
+        # If no date matches, search in notes and priority
+        if not entries:
+            service = HistoryService(db)
+            entries = service.search_entries(1, query, limit=20)
+        
+        if not entries:
+            console.print(f"\n[yellow]No entries found matching '[cyan]{query}[/cyan]'[/yellow]\n")
+            console.print("[dim]Press Enter to continue...[/dim]")
+            input()
+            return
+        
+        # Display results
+        console.print(f"\n[bold]Found {len(entries)} {'entry' if len(entries) == 1 else 'entries'}[/bold]\n")
+        
+        table = Table(show_header=True, header_style="bold cyan")
+        table.add_column("#", style="dim", width=4)
+        table.add_column("Date", width=12)
+        table.add_column("Income", justify="right", width=10)
+        table.add_column("Expenses", justify="right", width=10)
+        table.add_column("Stress", justify="center", width=8)
+        table.add_column("Priority", width=30)
+        
+        for idx, entry in enumerate(entries, 1):
+            total_income = entry.income_today + entry.side_income
+            total_expenses = entry.bills_due_today + entry.food_spent + entry.gas_spent
+            
+            stress = entry.stress_level
+            stress_color = "green" if stress <= 3 else "yellow" if stress <= 6 else "red"
+            stress_str = f"[{stress_color}]{stress}/10[/]"
+            
+            table.add_row(
+                str(idx),
+                str(entry.date),
+                f"${total_income:.2f}",
+                f"${total_expenses:.2f}",
+                stress_str,
+                entry.priority or "[dim]none[/dim]"
+            )
+        
+        console.print(table)
+        console.print()
+        
+        # Ask if user wants to view details
+        choice = Prompt.ask(
+            "Enter entry number to view details (or press Enter to go back)",
+            default=""
+        )
+        
+        if choice and choice.isdigit():
+            idx = int(choice)
+            if 1 <= idx <= len(entries):
+                show_entry_detail(entries[idx - 1])
+            else:
+                console.print("[red]Invalid entry number[/red]")
+                console.print("\n[dim]Press Enter to continue...[/dim]")
+                input()
 
 
 def handle_stats():

@@ -98,7 +98,7 @@ def display_feedback(feedback):
     # Display completed feedback
     panel = Panel(
         feedback.content,
-        title="[bold green]🤖 AI Motivational Feedback[/bold green]",
+        title="[bold green]💬 Feedback[/bold green]",
         border_style="green",
         padding=(1, 2),
     )

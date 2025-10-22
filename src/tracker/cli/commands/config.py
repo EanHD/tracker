@@ -1,6 +1,9 @@
 """Configuration command"""
 
 import click
+import shutil
+from datetime import datetime
+from pathlib import Path
 from cryptography.fernet import Fernet
 from rich.console import Console
 from rich.prompt import Confirm, Prompt
@@ -21,6 +24,19 @@ def setup():
     """Interactive configuration setup"""
     
     console.print("\n[bold blue]🔧 Tracker Configuration Setup[/bold blue]\n")
+    
+    # Check if .env exists and offer backup
+    env_path = Path(".env")
+    backup_path = None
+    
+    if env_path.exists():
+        console.print("[yellow]⚠️  .env file already exists[/yellow]")
+        
+        if Confirm.ask("Create backup before continuing?", default=True):
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            backup_path = Path(f".env.backup.{timestamp}")
+            shutil.copy2(env_path, backup_path)
+            console.print(f"[green]✅ Backup created: {backup_path}[/green]\n")
     
     # AI Provider
     console.print("[bold cyan]AI Provider Configuration[/bold cyan]")
@@ -90,11 +106,30 @@ def setup():
         console.print("Generating new encryption key...")
         encryption_key = Fernet.generate_key().decode()
     
-    # Show configuration
+    # Show configuration summary with confirmation
     console.print("\n[bold green]✅ Configuration Summary[/bold green]\n")
     console.print(f"AI Provider: [cyan]{provider}[/cyan]")
     console.print(f"Model: [cyan]{model_name}[/cyan]")
-    console.print(f"API Key: [dim]{'*' * 20}[/dim]")
+    
+    if api_key:
+        # Show first/last few chars of API key for verification
+        masked_key = f"{api_key[:8]}...{api_key[-4:]}" if len(api_key) > 12 else "***"
+        console.print(f"API Key: [dim]{masked_key}[/dim]")
+    else:
+        console.print(f"API Key: [dim]Not required (local)[/dim]")
+    
+    if not settings.encryption_key:
+        console.print(f"New Encryption Key: [dim]Will be generated[/dim]")
+    
+    # Allow user to cancel before writing
+    console.print()
+    if not Confirm.ask("[bold]Does this look correct?[/bold]", default=True):
+        console.print("\n[yellow]❌ Configuration cancelled. No changes made.[/yellow]")
+        if backup_path and backup_path.exists():
+            backup_path.unlink()  # Remove backup if we're not making changes
+            console.print(f"[dim]Backup {backup_path} removed[/dim]")
+        console.print("\n[dim]Run 'tracker config setup' again to restart.[/dim]\n")
+        return
     
     # Instructions
     console.print("\n[bold yellow]📝 Next Steps:[/bold yellow]\n")
@@ -124,36 +159,58 @@ def setup():
     console.print()
     
     # Offer to write to .env
-    if Confirm.ask("\n💾 Write to .env file now?", default=True):
-        try:
-            with open(".env", "a") as f:
-                from datetime import datetime
-                f.write(f"\n# AI Configuration (added {datetime.now().strftime('%Y-%m-%d %H:%M:%S')})\n")
-                f.write(f"AI_PROVIDER={provider}\n")
-                
-                if api_key:
-                    f.write(f"{env_var}={api_key}\n")
-                
-                if provider == "local":
-                    f.write(f"LOCAL_API_URL=http://localhost:11434/v1\n")
-                    f.write(f"LOCAL_MODEL={model or model_name}\n")
-                elif model:
-                    if provider == "anthropic":
-                        f.write(f"ANTHROPIC_MODEL={model}\n")
-                    elif provider == "openai":
-                        f.write(f"OPENAI_MODEL={model}\n")
-                    elif provider == "openrouter":
-                        f.write(f"OPENROUTER_MODEL={model}\n")
-                
-                if not settings.encryption_key:
-                    f.write(f"ENCRYPTION_KEY={encryption_key}\n")
+    console.print()
+    if not Confirm.ask("💾 Write configuration to .env file?", default=True):
+        console.print("\n[yellow]❌ Configuration not saved.[/yellow]")
+        if backup_path and backup_path.exists():
+            backup_path.unlink()
+            console.print(f"[dim]Backup {backup_path} removed[/dim]")
+        console.print("\n[dim]You can copy the configuration above manually, or run 'tracker config setup' again.[/dim]\n")
+        return
+    
+    # Write to .env
+    try:
+        with open(".env", "a") as f:
+            f.write(f"\n# AI Configuration (added {datetime.now().strftime('%Y-%m-%d %H:%M:%S')})\n")
+            f.write(f"AI_PROVIDER={provider}\n")
             
-            console.print("[bold green]✅ Configuration saved to .env[/bold green]")
-            console.print("\n[cyan]Ready to use! Try: tracker new[/cyan]\n")
+            if api_key:
+                f.write(f"{env_var}={api_key}\n")
+            
+            if provider == "local":
+                f.write(f"LOCAL_API_URL=http://localhost:11434/v1\n")
+                f.write(f"LOCAL_MODEL={model or model_name}\n")
+            elif model:
+                if provider == "anthropic":
+                    f.write(f"ANTHROPIC_MODEL={model}\n")
+                elif provider == "openai":
+                    f.write(f"OPENAI_MODEL={model}\n")
+                elif provider == "openrouter":
+                    f.write(f"OPENROUTER_MODEL={model}\n")
+            
+            if not settings.encryption_key:
+                f.write(f"ENCRYPTION_KEY={encryption_key}\n")
         
-        except Exception as e:
-            console.print(f"[red]❌ Failed to write .env: {e}[/red]")
-            console.print("[yellow]Please add the configuration manually[/yellow]")
+        console.print("\n[bold green]✅ Configuration saved to .env[/bold green]")
+        
+        if backup_path:
+            console.print(f"[dim]💾 Backup available at: {backup_path}[/dim]")
+            console.print(f"[dim]   To restore: mv {backup_path} .env[/dim]")
+        
+        console.print("\n[cyan]✨ Ready to use! Try: tracker new[/cyan]\n")
+    
+    except Exception as e:
+        console.print(f"\n[red]❌ Failed to write .env: {e}[/red]")
+        
+        # Offer to restore backup
+        if backup_path and backup_path.exists():
+            if Confirm.ask("Restore from backup?", default=True):
+                shutil.copy2(backup_path, env_path)
+                console.print(f"[green]✅ Restored from {backup_path}[/green]")
+            else:
+                console.print(f"[yellow]Backup preserved at: {backup_path}[/yellow]")
+        
+        console.print("[yellow]Please add the configuration manually or try again[/yellow]\n")
 
 
 @config.command()

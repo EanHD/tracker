@@ -168,7 +168,7 @@ def show_entry_detail(entry):
     # Get AI feedback if available
     with SessionLocal() as db:
         feedback_service = FeedbackService(db)
-        feedback = feedback_service.get_feedback(entry.id)
+        feedback = feedback_service.get_feedback_by_entry(entry.id)
         
         if feedback:
             console.print()

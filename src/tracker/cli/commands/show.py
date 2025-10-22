@@ -14,8 +14,8 @@ console = Console()
 
 @click.command()
 @click.argument("date_arg", required=False)
-@click.option("--with-feedback", is_flag=True, help="Show AI feedback if available")
-def show(date_arg, with_feedback):
+@click.option("--no-feedback", is_flag=True, help="Hide AI feedback")
+def show(date_arg, no_feedback):
     """
     Show a daily entry
     
@@ -24,6 +24,9 @@ def show(date_arg, with_feedback):
     - 'today' (default)
     - 'yesterday'
     - Relative like '-1', '-2' for days ago
+    
+    By default, AI feedback is shown if available.
+    Use --no-feedback to hide it.
     """
     
     # Parse date argument
@@ -54,7 +57,7 @@ def show(date_arg, with_feedback):
         
         # Display entry
         console.print()
-        display_entry(entry, show_feedback=with_feedback)
+        display_entry(entry, show_feedback=not no_feedback)
         
     except Exception as e:
         display_error(f"Failed to fetch entry: {e}")

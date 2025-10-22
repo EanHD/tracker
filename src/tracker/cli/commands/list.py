@@ -65,11 +65,25 @@ def list(days, limit, start, end):
         table.add_column("Spending", style="magenta", justify="right")
         table.add_column("Hours", justify="right")
         table.add_column("Stress", justify="center")
+        table.add_column("AI", justify="center", style="dim")
         table.add_column("Priority", style="dim", max_width=25)
         
         for entry in entries:
             spending = entry.food_spent + entry.gas_spent
             stress_color = get_stress_color(entry.stress_level)
+            
+            # Check feedback status
+            if hasattr(entry, 'feedback') and entry.feedback:
+                if entry.feedback.status == 'completed':
+                    ai_status = "✓"
+                elif entry.feedback.status == 'pending':
+                    ai_status = "⏳"
+                elif entry.feedback.status == 'failed':
+                    ai_status = "✗"
+                else:
+                    ai_status = "-"
+            else:
+                ai_status = "-"
             
             table.add_row(
                 str(entry.date),
@@ -78,6 +92,7 @@ def list(days, limit, start, end):
                 format_currency(spending),
                 str(entry.hours_worked),
                 f"[{stress_color}]{entry.stress_level}/10[/{stress_color}]",
+                ai_status,
                 entry.priority or "-"
             )
         

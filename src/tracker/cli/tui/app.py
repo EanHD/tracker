@@ -22,7 +22,7 @@ def show_main_menu():
     console.print("  [bold cyan]3.[/bold cyan] 🔍 Search Entries")
     console.print("  [bold cyan]4.[/bold cyan] 📊 Statistics")
     console.print("  [bold cyan]5.[/bold cyan] 🏆 Achievements")
-    console.print("  [bold cyan]6.[/bold cyan] ⚙️  Configuration")
+    console.print("  [bold cyan]6.[/bold cyan] ⚙️ Configuration")
     console.print("  [bold cyan]7.[/bold cyan] 📤 Export Data")
     console.print("  [bold cyan]8.[/bold cyan] 👤 Profile")
     console.print("  [bold cyan]9.[/bold cyan] ❓ Help")
@@ -321,7 +321,7 @@ def handle_achievements():
 
 def handle_config():
     """Handle configuration"""
-    console.print("\n[bold cyan]⚙️  Configuration[/bold cyan]\n")
+    console.print("\n[bold cyan]⚙️ Configuration[/bold cyan]\n")
     
     from tracker.cli.commands.config import config as config_cmd
     from click.testing import CliRunner

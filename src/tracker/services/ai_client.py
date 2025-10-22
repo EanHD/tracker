@@ -1,0 +1,346 @@
+"""AI client abstraction for multiple providers"""
+
+import time
+from abc import ABC, abstractmethod
+from typing import Optional
+
+from tracker.core.models import DailyEntry
+
+
+class AIClient(ABC):
+    """Abstract base class for AI clients"""
+
+    @abstractmethod
+    def generate_feedback(self, entry: DailyEntry) -> tuple[str, dict]:
+        """
+        Generate motivational feedback for an entry
+        
+        Args:
+            entry: DailyEntry to generate feedback for
+            
+        Returns:
+            Tuple of (feedback_content, metadata_dict)
+            metadata includes: model, tokens_used, generation_time
+        """
+        pass
+
+    def _build_prompt(self, entry: DailyEntry) -> str:
+        """Build motivational feedback prompt from entry data"""
+        
+        prompt = f"""Generate supportive, empathetic motivational feedback for this daily financial entry.
+
+Date: {entry.date}
+
+Financial snapshot:
+  - Cash on hand: ${entry.cash_on_hand or 'N/A'}
+  - Bank balance: ${entry.bank_balance or 'N/A'}
+  - Income today: ${entry.income_today}
+  - Bills due: ${entry.bills_due_today}
+  - Total debt: ${entry.debts_total or 'N/A'}
+  - Side income: ${entry.side_income}
+
+Spending:
+  - Food: ${entry.food_spent}
+  - Gas: ${entry.gas_spent}
+
+Work:
+  - Hours worked: {entry.hours_worked}
+
+Wellbeing:
+  - Stress level: {entry.stress_level}/10
+  - Priority: {entry.priority or 'N/A'}
+"""
+
+        if entry.notes:
+            prompt += f"\nNotes: {entry.notes}"
+
+        prompt += """
+
+Guidelines for your response:
+- Be warm, supportive, and genuinely encouraging
+- Acknowledge challenges without toxic positivity
+- Celebrate wins, even small ones
+- Provide perspective on their financial progress
+- Keep tone empathetic and non-judgmental
+- Focus on effort and resilience, not just outcomes
+- Be concise (2-3 paragraphs max)
+- End with something uplifting or actionable
+
+Generate the motivational feedback now:"""
+
+        return prompt
+
+
+class AnthropicClient(AIClient):
+    """Anthropic Claude AI client"""
+
+    def __init__(self, api_key: str, model: Optional[str] = None):
+        self.api_key = api_key
+        self.model = model or "claude-3-sonnet-20240229"
+        self._client = None
+
+    def _get_client(self):
+        """Lazy load Anthropic client"""
+        if self._client is None:
+            from anthropic import Anthropic
+            self._client = Anthropic(api_key=self.api_key)
+        return self._client
+
+    def generate_feedback(self, entry: DailyEntry) -> tuple[str, dict]:
+        """Generate feedback using Claude"""
+        
+        start_time = time.time()
+        
+        client = self._get_client()
+        prompt = self._build_prompt(entry)
+        
+        try:
+            response = client.messages.create(
+                model=self.model,
+                max_tokens=1024,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ]
+            )
+            
+            generation_time = time.time() - start_time
+            
+            content = response.content[0].text
+            
+            metadata = {
+                "model": self.model,
+                "tokens_used": response.usage.input_tokens + response.usage.output_tokens,
+                "generation_time": generation_time,
+            }
+            
+            return content, metadata
+            
+        except Exception as e:
+            raise RuntimeError(f"Anthropic API error: {e}")
+
+
+class OpenAIClient(AIClient):
+    """OpenAI GPT client"""
+
+    def __init__(self, api_key: str, model: Optional[str] = None):
+        self.api_key = api_key
+        self.model = model or "gpt-4"
+        self._client = None
+
+    def _get_client(self):
+        """Lazy load OpenAI client"""
+        if self._client is None:
+            from openai import OpenAI
+            self._client = OpenAI(api_key=self.api_key)
+        return self._client
+
+    def generate_feedback(self, entry: DailyEntry) -> tuple[str, dict]:
+        """Generate feedback using GPT"""
+        
+        start_time = time.time()
+        
+        client = self._get_client()
+        prompt = self._build_prompt(entry)
+        
+        try:
+            response = client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a supportive financial wellness coach who provides empathetic, non-judgmental encouragement to people tracking their daily finances."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                max_tokens=500,
+                temperature=0.7,
+            )
+            
+            generation_time = time.time() - start_time
+            
+            content = response.choices[0].message.content
+            
+            metadata = {
+                "model": self.model,
+                "tokens_used": response.usage.total_tokens,
+                "generation_time": generation_time,
+            }
+            
+            return content, metadata
+            
+        except Exception as e:
+            raise RuntimeError(f"OpenAI API error: {e}")
+
+
+class OpenRouterClient(AIClient):
+    """OpenRouter client (100+ models via unified API)"""
+
+    def __init__(self, api_key: str, model: Optional[str] = None):
+        self.api_key = api_key
+        self.model = model or "anthropic/claude-3.5-sonnet"
+        self._client = None
+
+    def _get_client(self):
+        """Lazy load OpenAI client with OpenRouter base URL"""
+        if self._client is None:
+            from openai import OpenAI
+            self._client = OpenAI(
+                api_key=self.api_key,
+                base_url="https://openrouter.ai/api/v1"
+            )
+        return self._client
+
+    def generate_feedback(self, entry: DailyEntry) -> tuple[str, dict]:
+        """Generate feedback using OpenRouter"""
+        
+        start_time = time.time()
+        
+        client = self._get_client()
+        prompt = self._build_prompt(entry)
+        
+        try:
+            response = client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a supportive financial wellness coach who provides empathetic, non-judgmental encouragement to people tracking their daily finances."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                max_tokens=500,
+                temperature=0.7,
+            )
+            
+            generation_time = time.time() - start_time
+            
+            content = response.choices[0].message.content
+            
+            metadata = {
+                "model": self.model,
+                "tokens_used": response.usage.total_tokens if response.usage else 0,
+                "generation_time": generation_time,
+            }
+            
+            return content, metadata
+            
+        except Exception as e:
+            raise RuntimeError(f"OpenRouter API error: {e}")
+
+
+class LocalClient(AIClient):
+    """Local AI client (Ollama, LM Studio, llama.cpp)"""
+
+    def __init__(self, base_url: str = "http://localhost:1234/v1", model: Optional[str] = None):
+        self.base_url = base_url
+        self.model = model or "local-model"
+        self._client = None
+
+    def _get_client(self):
+        """Lazy load OpenAI client with local base URL"""
+        if self._client is None:
+            from openai import OpenAI
+            self._client = OpenAI(
+                api_key="not-needed",
+                base_url=self.base_url
+            )
+        return self._client
+
+    def generate_feedback(self, entry: DailyEntry) -> tuple[str, dict]:
+        """Generate feedback using local AI server"""
+        
+        start_time = time.time()
+        
+        client = self._get_client()
+        prompt = self._build_prompt(entry)
+        
+        try:
+            response = client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a supportive financial wellness coach who provides empathetic, non-judgmental encouragement to people tracking their daily finances."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                max_tokens=500,
+                temperature=0.7,
+            )
+            
+            generation_time = time.time() - start_time
+            
+            content = response.choices[0].message.content
+            
+            metadata = {
+                "model": self.model,
+                "tokens_used": response.usage.total_tokens if response.usage else 0,
+                "generation_time": generation_time,
+            }
+            
+            return content, metadata
+            
+        except Exception as e:
+            raise RuntimeError(f"Local AI server error: {e}")
+
+
+def create_ai_client(
+    provider: str,
+    api_key: Optional[str] = None,
+    model: Optional[str] = None,
+    local_api_url: Optional[str] = None
+) -> AIClient:
+    """
+    Factory function to create AI client
+    
+    Args:
+        provider: 'openai', 'anthropic', 'openrouter', or 'local'
+        api_key: API key for the provider (not needed for local)
+        model: Optional model name override
+        local_api_url: Base URL for local provider (default: http://localhost:1234/v1)
+        
+    Returns:
+        AIClient instance
+        
+    Raises:
+        ValueError: If provider is not supported or required parameters missing
+    """
+    
+    provider = provider.lower()
+    
+    if provider == "anthropic":
+        if not api_key:
+            raise ValueError("Anthropic API key is required")
+        return AnthropicClient(api_key, model)
+    
+    elif provider == "openai":
+        if not api_key:
+            raise ValueError("OpenAI API key is required")
+        return OpenAIClient(api_key, model)
+    
+    elif provider == "openrouter":
+        if not api_key:
+            raise ValueError("OpenRouter API key is required")
+        return OpenRouterClient(api_key, model)
+    
+    elif provider == "local":
+        base_url = local_api_url or "http://localhost:1234/v1"
+        return LocalClient(base_url, model)
+    
+    else:
+        raise ValueError(
+            f"Unsupported AI provider: {provider}. "
+            f"Supported providers: openai, anthropic, openrouter, local"
+        )

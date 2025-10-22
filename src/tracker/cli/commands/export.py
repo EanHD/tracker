@@ -1,0 +1,138 @@
+"""Export command - Export entries to CSV or JSON"""
+
+from datetime import datetime
+from pathlib import Path
+
+import click
+from rich.console import Console
+from rich.panel import Panel
+
+from tracker.core.database import SessionLocal
+from tracker.services.export_service import ExportService
+
+console = Console()
+
+
+@click.command()
+@click.option(
+    "--format",
+    "export_format",
+    type=click.Choice(["csv", "json"], case_sensitive=False),
+    default="json",
+    help="Export format",
+    show_default=True
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(),
+    help="Output file path (default: tracker_export_YYYYMMDD.{format})"
+)
+@click.option(
+    "--start-date",
+    type=click.DateTime(formats=["%Y-%m-%d"]),
+    help="Export entries from this date (YYYY-MM-DD)"
+)
+@click.option(
+    "--end-date",
+    type=click.DateTime(formats=["%Y-%m-%d"]),
+    help="Export entries until this date (YYYY-MM-DD)"
+)
+@click.option(
+    "--compact",
+    is_flag=True,
+    help="Compact JSON output (no pretty-printing)"
+)
+def export(export_format: str, output: str, start_date, end_date, compact: bool):
+    """
+    Export entries to CSV or JSON format
+    
+    Examples:
+    
+      # Export all entries to JSON
+      tracker export
+      
+      # Export to CSV
+      tracker export --format csv
+      
+      # Export to specific file
+      tracker export -o my_data.json
+      
+      # Export date range
+      tracker export --start-date 2025-10-01 --end-date 2025-10-31
+      
+      # Compact JSON (smaller file size)
+      tracker export --format json --compact
+    """
+    db = SessionLocal()
+    service = ExportService(db)
+    
+    try:
+        # Parse dates
+        start = start_date.date() if start_date else None
+        end = end_date.date() if end_date else None
+        
+        # Get export stats
+        stats = service.get_export_stats(1, start_date=start, end_date=end)  # TODO: Get actual user
+        
+        if stats["entry_count"] == 0:
+            console.print("[yellow]No entries found to export.[/yellow]")
+            return
+        
+        # Determine output path
+        if output:
+            output_path = Path(output)
+        else:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            output_path = Path(f"tracker_export_{timestamp}.{export_format}")
+        
+        # Show export info
+        console.print(f"\n[bold blue]Exporting Data[/bold blue]\n")
+        console.print(f"  Format: [cyan]{export_format.upper()}[/cyan]")
+        console.print(f"  Entries: [cyan]{stats['entry_count']}[/cyan]")
+        console.print(f"  Date range: [cyan]{stats['earliest_date']} to {stats['latest_date']}[/cyan]")
+        console.print(f"  Output: [cyan]{output_path}[/cyan]")
+        
+        # Estimate file size
+        size_key = f"estimated_{export_format}_size_kb"
+        if size_key in stats:
+            console.print(f"  Estimated size: [cyan]{stats[size_key]:.1f} KB[/cyan]")
+        
+        console.print()
+        
+        # Perform export
+        with console.status("[cyan]Exporting...[/cyan]"):
+            if export_format == "csv":
+                content = service.export_to_csv(
+                    1,  # TODO: Get actual user
+                    filepath=output_path,
+                    start_date=start,
+                    end_date=end
+                )
+            else:  # json
+                content = service.export_to_json(
+                    1,  # TODO: Get actual user
+                    filepath=output_path,
+                    start_date=start,
+                    end_date=end,
+                    pretty=not compact
+                )
+        
+        # Show success
+        actual_size = len(content.encode('utf-8')) / 1024
+        console.print(f"[green]✓ Export complete![/green]")
+        console.print(f"  File: [cyan]{output_path.absolute()}[/cyan]")
+        console.print(f"  Size: [cyan]{actual_size:.1f} KB[/cyan]\n")
+        
+        # Show sample for JSON
+        if export_format == "json" and stats["entry_count"] > 0:
+            console.print("[dim]Preview (first few lines):[/dim]")
+            lines = content.split('\n')[:10]
+            preview = '\n'.join(lines)
+            console.print(Panel(preview, border_style="dim"))
+        
+    except Exception as e:
+        console.print(f"[red]Error: {e}[/red]")
+        raise
+    finally:
+        db.close()

@@ -1,0 +1,86 @@
+"""Show entry command"""
+
+from datetime import date, datetime, timedelta
+
+import click
+from rich.console import Console
+
+from tracker.cli.ui.display import display_entry, display_error, display_info
+from tracker.core.database import SessionLocal
+from tracker.services.entry_service import EntryService
+
+console = Console()
+
+
+@click.command()
+@click.argument("date_arg", required=False)
+@click.option("--with-feedback", is_flag=True, help="Show AI feedback if available")
+def show(date_arg, with_feedback):
+    """
+    Show a daily entry
+    
+    DATE can be:
+    - YYYY-MM-DD format (e.g., 2025-10-21)
+    - 'today' (default)
+    - 'yesterday'
+    - Relative like '-1', '-2' for days ago
+    """
+    
+    # Parse date argument
+    try:
+        entry_date = _parse_date_arg(date_arg)
+    except ValueError as e:
+        display_error(str(e))
+        return
+    
+    # Get entry
+    db = SessionLocal()
+    try:
+        service = EntryService(db)
+        
+        # Get default user
+        user = service.get_default_user()
+        if not user:
+            display_error("No user found. Please run 'tracker init' first.")
+            return
+        
+        # Fetch entry
+        entry = service.get_entry_by_date(user.id, entry_date)
+        
+        if not entry:
+            display_info(f"No entry found for {entry_date}")
+            console.print(f"\n[cyan]Create one:[/cyan] tracker new --date {entry_date}")
+            return
+        
+        # Display entry
+        console.print()
+        display_entry(entry, show_feedback=with_feedback)
+        
+    except Exception as e:
+        display_error(f"Failed to fetch entry: {e}")
+    finally:
+        db.close()
+
+
+def _parse_date_arg(date_arg: str) -> date:
+    """Parse date argument into date object"""
+    
+    if not date_arg or date_arg.lower() == "today":
+        return date.today()
+    
+    if date_arg.lower() == "yesterday":
+        return date.today() - timedelta(days=1)
+    
+    # Check if it's a relative date like -1, -2
+    if date_arg.startswith("-") and date_arg[1:].isdigit():
+        days_ago = int(date_arg[1:])
+        return date.today() - timedelta(days=days_ago)
+    
+    # Try parsing as YYYY-MM-DD
+    try:
+        return datetime.strptime(date_arg, "%Y-%m-%d").date()
+    except ValueError:
+        raise ValueError(
+            f"Invalid date format: {date_arg}. "
+            "Use YYYY-MM-DD, 'today', 'yesterday', or '-N' for N days ago."
+        )

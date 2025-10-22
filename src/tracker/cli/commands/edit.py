@@ -227,46 +227,46 @@ def prompt_for_updates(entry) -> Optional[EntryUpdate]:
     updates = {}
     
     # Financial fields
-    cash = prompt_decimal("Cash on hand", default=entry.cash_on_hand)
+    cash = prompt_decimal("Cash on hand", default=str(entry.cash_on_hand) if entry.cash_on_hand is not None else None)
     if cash != entry.cash_on_hand:
         updates['cash_on_hand'] = cash
     
-    bank = prompt_decimal("Bank balance", default=entry.bank_balance)
+    bank = prompt_decimal("Bank balance", default=str(entry.bank_balance) if entry.bank_balance is not None else None)
     if bank != entry.bank_balance:
         updates['bank_balance'] = bank
     
-    income = prompt_decimal("Income today", default=entry.income_today)
+    income = prompt_decimal("Income today", default=str(entry.income_today))
     if income != entry.income_today:
         updates['income_today'] = income
     
-    bills = prompt_decimal("Bills due today", default=entry.bills_due_today)
+    bills = prompt_decimal("Bills due today", default=str(entry.bills_due_today))
     if bills != entry.bills_due_today:
         updates['bills_due_today'] = bills
     
-    debts = prompt_decimal("Total debts", default=entry.debts_total)
+    debts = prompt_decimal("Total debts", default=str(entry.debts_total) if entry.debts_total is not None else None)
     if debts != entry.debts_total:
         updates['debts_total'] = debts
     
     # Work fields
-    hours = prompt_decimal("Hours worked", default=entry.hours_worked)
+    hours = prompt_decimal("Hours worked", default=str(entry.hours_worked))
     if hours != entry.hours_worked:
         updates['hours_worked'] = hours
     
-    side = prompt_decimal("Side income", default=entry.side_income)
+    side = prompt_decimal("Side income", default=str(entry.side_income))
     if side != entry.side_income:
         updates['side_income'] = side
     
     # Spending fields
-    food = prompt_decimal("Food spent", default=entry.food_spent)
+    food = prompt_decimal("Food spent", default=str(entry.food_spent))
     if food != entry.food_spent:
         updates['food_spent'] = food
     
-    gas = prompt_decimal("Gas spent", default=entry.gas_spent)
+    gas = prompt_decimal("Gas spent", default=str(entry.gas_spent))
     if gas != entry.gas_spent:
         updates['gas_spent'] = gas
     
     # Wellbeing fields
-    stress = prompt_integer_range("Stress level", default=entry.stress_level, min_val=1, max_val=10)
+    stress = prompt_integer_range("Stress level", default=str(entry.stress_level), min_val=1, max_val=10)
     if stress != entry.stress_level:
         updates['stress_level'] = stress
     

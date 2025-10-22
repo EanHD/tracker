@@ -40,43 +40,76 @@ A powerful daily tracking application with AI-powered insights. Track finances, 
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### 📦 Installation Methods
 
-- **Python 3.12+** - Required for latest features
-- **uv** - Fast Python package manager (10-100x faster than pip)
+#### Method 1: UV (Recommended - Fastest)
 
-### Installation
+**Why UV?**
+- ⚡ 10-100x faster than pip
+- 🔒 Automatic virtual environment management
+- 📦 Modern Rust-based package manager
 
 ```bash
 # Install uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Clone repository
+# Clone and install
 git clone https://github.com/EanHD/tracker.git
 cd tracker
-
-# Setup environment
-uv venv
+uv sync
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
-uv pip install -e .
 
 # Initialize database
 python scripts/init_db.py
 ```
 
-### 🐳 Docker Quick Start
+#### Method 2: Docker (Most Isolated)
+
+**Why Docker?**
+- 🐳 Complete environment isolation
+- ✅ No Python version conflicts
+- 📤 Easy deployment and sharing
+- 💾 Data persists in volumes
 
 ```bash
-# Using Docker Compose
+git clone https://github.com/EanHD/tracker.git
+cd tracker
 cp .env.example .env
 # Edit .env with your API keys
+
 docker-compose up -d
 
-# Test API
-curl http://localhost:5703/api/v1/health
+# Access the container
+docker-compose exec tracker bash
+tracker
 ```
 
-### Configuration
+#### Method 3: Traditional pip
+
+**Why pip?**
+- 📚 Most familiar to developers
+- 🛠️ Direct control over environment
+
+```bash
+git clone https://github.com/EanHD/tracker.git
+cd tracker
+
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -e .
+
+python scripts/init_db.py
+```
+
+### 🎯 Usage Modes
+
+| Mode | Command | Best For | Pros | Cons |
+|------|---------|----------|------|------|
+| **Menu App** | `tracker` | Daily use | Easy navigation, beginner-friendly | Can't script |
+| **CLI Commands** | `tracker new`, `tracker show` | Power users, automation | Fast, scriptable | Must remember commands |
+| **API Server** | `tracker server` | Custom frontends | Build web/mobile apps | Requires API knowledge |
+
+### Prerequisites
 
 ```bash
 # Interactive onboarding (recommended)

@@ -234,12 +234,65 @@ tracker list --limit 30 | grep "Net:"
 Create a new daily entry with optional AI feedback.
 
 **Interactive Mode:**
+
 ```bash
 tracker new
 # Follow the prompts to enter your data
+# After entering all fields, you'll see a preview with options to:
+# [1] Save - Confirm and save the entry
+# [2] Edit - Fix any mistakes before saving
+# [3] Cancel - Abort without saving
+```
+
+**Review & Edit Feature:**
+
+After completing all prompts, you can review and edit any field before saving:
+
+```text
+📋 Entry Preview
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+💰 Financial
+  Cash on hand: $500.00
+  Bank balance: $1500.00
+...
+
+What would you like to do?
+[1] 💾 Save this entry
+[2] ✏️  Edit a field      ← Fix mistakes!
+[3] ❌ Cancel
+
+Choose [1/2/3] (1): 2
+
+Which field would you like to edit?
+[1] 📅 Date: 2025-10-21
+[2] 💵 Cash on hand: $500.00
+[3] 🏦 Bank balance: $1500.00
+...
+[13] 📝 Notes: not set
+
+Field to edit: 3
+New bank balance: $2500    ← Corrected!
+✓ Updated 🏦 Bank balance
+```
+
+**Error Recovery:**
+
+Invalid input no longer crashes the form - you'll be prompted to try again:
+
+```text
+Cash on hand: $abc
+❌ Invalid input: Please enter a valid number
+⚠️  Please try again (or press Ctrl+C to cancel)
+Cash on hand: $500   ← Retry!
+
+Stress level (1-10): 99
+❌ Invalid input: Value must be between 1 and 10
+⚠️  Please enter a number between 1 and 10
+Stress level (1-10): 7   ← Fixed!
 ```
 
 **Quick Mode (with flags):**
+
 ```bash
 tracker new \
   --date 2025-10-21 \

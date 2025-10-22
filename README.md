@@ -17,6 +17,8 @@ A powerful CLI-first daily tracking application with AI-powered insights. Track 
 - 🔍 **Full-Text Search** - Find entries with keyword highlighting
 - 📈 **Statistics & Trends** - Analyze patterns with visual charts
 - 🎯 **Gamification** - 9 achievements, streak tracking, progress bars
+- ✏️ **Review & Edit** - Preview entries before saving, fix mistakes without restarting
+- 🛡️ **Error Recovery** - Invalid input retries instead of crashing
 
 ### Interfaces
 - 🌐 **REST API** - FastAPI server with JWT authentication, OpenAPI docs

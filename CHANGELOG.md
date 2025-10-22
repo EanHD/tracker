@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Review & Edit Feature** - Preview entries before saving with option to edit any field
+- **Error Recovery** - Invalid input retries instead of crashing the entire form
+- **Configuration Safety** - Automatic .env backup before changes with restore capability
+- **Multi-Provider Config** - Added OpenRouter and Local (Ollama) support to `tracker config setup`
+
+### Changed
+- `tracker new` now shows preview with [Save/Edit/Cancel] options before committing
+- All input prompts wrapped in retry loops with helpful error messages
+- `tracker config setup` creates timestamped backups and allows cancellation
+- Improved API key display (shows first 8 + last 4 characters for verification)
+
+### Fixed
+- Form no longer exits on invalid input (e.g., letters in number fields)
+- Users can now fix mistakes without restarting the entire entry process
+- Better error messages guide users to correct input format
+
 ### Planned
 - Web UI (React/Next.js frontend)
 - Mobile app (React Native)

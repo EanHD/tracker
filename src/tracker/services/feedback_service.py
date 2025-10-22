@@ -246,10 +246,16 @@ class FeedbackService:
         else:
             api_key = None
         
-        # Get model - check both AI_MODEL and provider-specific env vars
+        # Get model - check provider-specific env vars first, then fallback to ai_model
         model = settings.ai_model
-        if not model and provider == "local":
-            model = settings.local_model or "local-model"
+        if provider == "local":
+            model = settings.local_model or model
+        elif provider == "anthropic":
+            model = settings.anthropic_model or model
+        elif provider == "openai":
+            model = settings.openai_model or model
+        elif provider == "openrouter":
+            model = settings.openrouter_model or model
         
         local_api_url = settings.local_api_url or "http://localhost:11434/v1"
         

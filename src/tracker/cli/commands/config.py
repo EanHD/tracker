@@ -228,7 +228,19 @@ def show():
     # AI
     console.print("\n[bold cyan]AI Provider[/bold cyan]")
     console.print(f"  Provider: {settings.ai_provider}")
-    console.print(f"  Model: {settings.ai_model or 'default'}")
+    
+    # Show provider-specific model
+    model_display = settings.ai_model or "default"
+    if settings.ai_provider == "local":
+        model_display = settings.local_model or model_display
+    elif settings.ai_provider == "anthropic":
+        model_display = settings.anthropic_model or model_display
+    elif settings.ai_provider == "openai":
+        model_display = settings.openai_model or model_display
+    elif settings.ai_provider == "openrouter":
+        model_display = settings.openrouter_model or model_display
+    
+    console.print(f"  Model: {model_display}")
     
     has_key = bool(settings.get_ai_api_key())
     console.print(f"  API Key: {'✅ Configured' if has_key else '❌ Not configured'}")

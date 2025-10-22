@@ -30,11 +30,15 @@ class Settings(BaseSettings):
     # AI Provider
     ai_provider: str = Field(default="anthropic", description="AI provider (openai, anthropic, openrouter, local)")
     anthropic_api_key: Optional[str] = Field(default=None, description="Anthropic API key")
+    anthropic_model: Optional[str] = Field(default=None, description="Anthropic model name")
     openai_api_key: Optional[str] = Field(default=None, description="OpenAI API key")
+    openai_model: Optional[str] = Field(default=None, description="OpenAI model name")
     openrouter_api_key: Optional[str] = Field(default=None, description="OpenRouter API key")
+    openrouter_model: Optional[str] = Field(default=None, description="OpenRouter model name")
     local_api_url: str = Field(default="http://localhost:1234/v1", description="Local API URL (Ollama/LM Studio)")
-    ai_model: Optional[str] = Field(default=None, description="AI model name")
     local_model: Optional[str] = Field(default=None, description="Local model name (for local provider)")
+    ai_model: Optional[str] = Field(default=None, description="AI model name (fallback)")
+
 
 
     # API Server

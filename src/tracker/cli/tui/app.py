@@ -37,7 +37,7 @@ def handle_new_entry():
     from tracker.cli.commands.new import new as new_cmd
     from click.testing import CliRunner
     
-    runner = CliRunner(mix_stderr=False)
+    runner = CliRunner()
     result = runner.invoke(new_cmd, [], catch_exceptions=False, standalone_mode=False)
     
     console.print("\n[dim]Press Enter to continue...[/dim]")
@@ -51,7 +51,7 @@ def handle_view_entries():
     from tracker.cli.commands.list import list as list_cmd
     from click.testing import CliRunner
     
-    runner = CliRunner(mix_stderr=False)
+    runner = CliRunner()
     result = runner.invoke(list_cmd, ['--days', '30'], catch_exceptions=False)
     
     # Print the output
@@ -71,7 +71,7 @@ def handle_search():
         from tracker.cli.commands.search import search as search_cmd
         from click.testing import CliRunner
         
-        runner = CliRunner(mix_stderr=False)
+        runner = CliRunner()
         result = runner.invoke(search_cmd, [query], catch_exceptions=False)
         
         # Print the output
@@ -89,7 +89,7 @@ def handle_stats():
     from tracker.cli.commands.stats import stats as stats_cmd
     from click.testing import CliRunner
     
-    runner = CliRunner(mix_stderr=False)
+    runner = CliRunner()
     result = runner.invoke(stats_cmd, [], catch_exceptions=False)
     
     # Print the output
@@ -107,7 +107,7 @@ def handle_achievements():
     from tracker.cli.commands.achievements import achievements as ach_cmd
     from click.testing import CliRunner
     
-    runner = CliRunner(mix_stderr=False)
+    runner = CliRunner()
     result = runner.invoke(ach_cmd, [], catch_exceptions=False)
     
     # Print the output
@@ -125,7 +125,7 @@ def handle_config():
     from tracker.cli.commands.config import config as config_cmd
     from click.testing import CliRunner
     
-    runner = CliRunner(mix_stderr=False)
+    runner = CliRunner()
     result = runner.invoke(config_cmd, ['show'], catch_exceptions=False)
     
     # Print the output
@@ -149,7 +149,7 @@ def handle_export():
         from tracker.cli.commands.export import export as export_cmd
         from click.testing import CliRunner
         
-        runner = CliRunner(mix_stderr=False)
+        runner = CliRunner()
         result = runner.invoke(export_cmd, ['--format', 'csv'], catch_exceptions=False)
         
         # Print the output
@@ -159,7 +159,7 @@ def handle_export():
         from tracker.cli.commands.export import export as export_cmd
         from click.testing import CliRunner
         
-        runner = CliRunner(mix_stderr=False)
+        runner = CliRunner()
         result = runner.invoke(export_cmd, ['--format', 'json'], catch_exceptions=False)
         
         # Print the output
@@ -178,7 +178,7 @@ def handle_profile():
     from tracker.cli.commands.profile import profile as profile_cmd
     from click.testing import CliRunner
     
-    runner = CliRunner(mix_stderr=False)
+    runner = CliRunner()
     result = runner.invoke(profile_cmd, ['show'], catch_exceptions=False)
     
     # Print the output

@@ -86,29 +86,41 @@ ENCRYPTION_KEY=your-generated-encryption-key-here
 
 #### 1. Configure AI Provider
 
-Daily Tracker supports multiple AI providers for feedback generation. Choose one:
+Daily Tracker supports multiple AI providers for feedback generation. Choose one by editing your `.env` file:
+
+**Option A: Edit .env file directly** (Recommended)
 
 ```bash
-# Configure OpenAI (recommended)
-tracker config set ai_provider openai
-tracker config set openai_api_key "sk-..."
-tracker config set openai_model "gpt-4"
+# Edit /home/eanhd/projects/tracker/.env
 
-# Or configure Anthropic
-tracker config set ai_provider anthropic
-tracker config set anthropic_api_key "sk-ant-..."
-tracker config set anthropic_model "claude-3-5-sonnet-20241022"
+# For OpenAI
+AI_PROVIDER=openai
+OPENAI_API_KEY=sk-...
+# OPENAI_MODEL=gpt-4  # Optional, defaults to gpt-4
 
-# Or configure OpenRouter (access to multiple models)
-tracker config set ai_provider openrouter
-tracker config set openrouter_api_key "sk-or-..."
-tracker config set openrouter_model "anthropic/claude-3.5-sonnet"
+# For Anthropic
+AI_PROVIDER=anthropic
+ANTHROPIC_API_KEY=sk-ant-...
+# ANTHROPIC_MODEL=claude-3-5-sonnet-20241022  # Optional
 
-# Or use local models (via Ollama)
-tracker config set ai_provider local
-tracker config set local_base_url "http://localhost:11434"
-tracker config set local_model "llama3.1"
+# For OpenRouter (access to multiple models)
+AI_PROVIDER=openrouter
+OPENROUTER_API_KEY=sk-or-...
+# OPENROUTER_MODEL=anthropic/claude-3.5-sonnet  # Optional
+
+# For local models (via Ollama)
+AI_PROVIDER=local
+LOCAL_API_URL=http://localhost:11434/v1
+LOCAL_MODEL=llama3.2
 ```
+
+**Option B: Interactive setup wizard**
+
+```bash
+tracker config setup
+```
+
+Note: The setup wizard has limited provider options. For full control, edit `.env` directly.
 
 #### 2. Run Onboarding
 
@@ -390,20 +402,19 @@ View and modify configuration settings.
 # View current configuration
 tracker config show
 
-# Set individual values
-tracker config set ai_provider openai
-tracker config set openai_api_key "sk-..."
+# Interactive configuration setup
+tracker config setup
 
-# Get specific value
-tracker config get ai_provider
+# Or edit .env file directly for full control
+# Edit: /home/your-user/projects/tracker/.env
 ```
 
-**Key Settings:**
-- `ai_provider` - AI service: openai, anthropic, openrouter, local
-- `openai_api_key`, `openai_model` - OpenAI configuration
-- `anthropic_api_key`, `anthropic_model` - Anthropic configuration
-- `openrouter_api_key`, `openrouter_model` - OpenRouter configuration
-- `local_base_url`, `local_model` - Local model configuration
+**Key Settings (in .env file):**
+- `AI_PROVIDER` - AI service: openai, anthropic, openrouter, local
+- `OPENAI_API_KEY`, `OPENAI_MODEL` - OpenAI configuration
+- `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` - Anthropic configuration
+- `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` - OpenRouter configuration
+- `LOCAL_API_URL`, `LOCAL_MODEL` - Local model configuration
 
 ### API Server
 

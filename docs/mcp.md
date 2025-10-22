@@ -242,7 +242,10 @@ You: "What entries do I have?"
 **Issue**: Feedback generation fails  
 **Solution**: Ensure AI provider is configured:
 ```bash
-tracker config set-provider
+# Edit .env file to set AI provider
+# AI_PROVIDER=local
+# LOCAL_API_URL=http://localhost:11434/v1
+# LOCAL_MODEL=llama3.2
 ```
 
 ## Advanced: HTTP Transport (Remote Access)

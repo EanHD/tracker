@@ -74,10 +74,9 @@ curl http://localhost:5703/api/v1/health
 # Interactive onboarding (recommended)
 tracker onboard
 
-# Manual configuration
-tracker config set ai_provider openai
-tracker config set openai_api_key "sk-..."
-tracker config set openai_model "gpt-4"
+# Or edit .env file directly
+# AI_PROVIDER=openai
+# OPENAI_API_KEY=sk-...
 ```
 
 ### Your First Entry
@@ -157,8 +156,8 @@ tracker export --format json  # Export to JSON
 
 # Configuration
 tracker config show      # View settings
-tracker config set ai_provider openai
-tracker onboard         # Run setup wizard
+tracker config setup     # Interactive wizard
+# Or edit .env file directly for full control
 
 # Servers
 tracker server          # Start REST API (port 5703)

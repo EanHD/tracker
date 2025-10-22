@@ -39,7 +39,7 @@ Internet
     ↓
 [Nginx :443] ← SSL/TLS
     ↓
-[Tracker API :5703]
+[Tracker API :8000]
     ↓
 [SQLite Database]
 ```
@@ -128,7 +128,7 @@ sudo su - tracker
 ```bash
 # Clone repository
 cd /home/tracker
-git clone https://github.com/yourusername/tracker.git
+git clone https://github.com/EanHD/tracker.git
 cd tracker
 
 # Create virtual environment
@@ -145,10 +145,15 @@ python scripts/init_db.py
 ### Step 4: Configure Application
 
 ```bash
-# Set production configuration
-tracker config set ai_provider openai
-tracker config set openai_api_key "your-production-key"
-tracker config set openai_model "gpt-4"
+# Edit production configuration
+nano /opt/tracker/.env
+
+# Set these values:
+# AI_PROVIDER=openai
+# OPENAI_API_KEY=your-production-key
+# OPENAI_MODEL=gpt-4
+# JWT_SECRET=<generate with: openssl rand -hex 32>
+# ENCRYPTION_KEY=<generate with: openssl rand -hex 32>
 
 # Verify installation
 tracker --version
@@ -198,7 +203,7 @@ WorkingDirectory=/home/tracker/tracker
 Environment="PATH=/home/tracker/tracker/.venv/bin"
 ExecStart=/home/tracker/tracker/.venv/bin/uvicorn tracker.api.main:app \
     --host 127.0.0.1 \
-    --port 5703 \
+    --port 8000 \
     --workers 2 \
     --log-level info \
     --no-access-log
@@ -284,7 +289,7 @@ limit_req_zone $binary_remote_addr zone=tracker_limit:10m rate=10r/s;
 
 # Upstream (API server)
 upstream tracker_api {
-    server 127.0.0.1:5703 fail_timeout=30s;
+    server 127.0.0.1:8000 fail_timeout=30s;
 }
 
 # HTTP → HTTPS redirect
@@ -770,13 +775,13 @@ sudo journalctl -u tracker-api -n 50
 
 **Common issues:**
 - Permission denied → Check file ownership
-- Port already in use → Check if another process is using port 5703
+- Port already in use → Check if another process is using port 8000
 - Module not found → Reinstall dependencies
 
 **Solution:**
 ```bash
-# Check what's using port 5703
-sudo lsof -i :5703
+# Check what's using port 8000
+sudo lsof -i :8000
 
 # Reinstall dependencies
 cd /home/tracker/tracker
@@ -800,7 +805,7 @@ ls -la /home/tracker/.config/tracker/
 sudo systemctl status tracker-api
 
 # Test API directly
-curl http://127.0.0.1:5703/api/v1/health
+curl http://127.0.0.1:8000/api/v1/health
 
 # Check Nginx error log
 sudo tail -f /var/log/nginx/tracker_error.log
@@ -896,7 +901,7 @@ Edit systemd service to add more workers:
 ```ini
 ExecStart=/home/tracker/tracker/.venv/bin/uvicorn tracker.api.main:app \
     --host 127.0.0.1 \
-    --port 5703 \
+    --port 8000 \
     --workers 4 \    # Increase from 2
     --log-level info
 ```

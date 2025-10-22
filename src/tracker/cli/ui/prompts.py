@@ -6,6 +6,9 @@ from typing import Optional
 
 from prompt_toolkit import prompt
 from prompt_toolkit.validation import ValidationError, Validator
+from rich.console import Console
+
+console = Console()
 
 
 class DecimalValidator(Validator):
@@ -81,20 +84,32 @@ def prompt_decimal(
     allow_negative: bool = False,
     required: bool = True
 ) -> Optional[Decimal]:
-    """Prompt for decimal input"""
-    validator = DecimalValidator(allow_negative=allow_negative) if required else None
+    """Prompt for decimal input with retry on error"""
     
-    result = prompt(
-        message,
-        default=default or "",
-        validator=validator,
-    )
-    
-    result = result.strip()
-    if not result:
-        return None
-    
-    return Decimal(result)
+    while True:
+        try:
+            validator = DecimalValidator(allow_negative=allow_negative) if required else None
+            
+            result = prompt(
+                message,
+                default=default or "",
+                validator=validator,
+            )
+            
+            result = result.strip()
+            if not result:
+                return None
+            
+            return Decimal(result)
+        
+        except (ValidationError, InvalidOperation) as e:
+            console.print(f"[red]Invalid input: {e}[/red]")
+            console.print("[yellow]Please try again (or press Ctrl+C to cancel)[/yellow]")
+        except KeyboardInterrupt:
+            raise  # Allow cancellation
+        except Exception as e:
+            console.print(f"[red]Error: {e}[/red]")
+            console.print("[yellow]Please try again (or press Ctrl+C to cancel)[/yellow]")
 
 
 def prompt_integer_range(
@@ -103,14 +118,26 @@ def prompt_integer_range(
     max_val: int,
     default: Optional[str] = None
 ) -> int:
-    """Prompt for integer within range"""
-    result = prompt(
-        message,
-        default=default or "",
-        validator=IntegerRangeValidator(min_val, max_val),
-    )
+    """Prompt for integer within range with retry on error"""
     
-    return int(result.strip())
+    while True:
+        try:
+            result = prompt(
+                message,
+                default=default or "",
+                validator=IntegerRangeValidator(min_val, max_val),
+            )
+            
+            return int(result.strip())
+        
+        except (ValidationError, ValueError) as e:
+            console.print(f"[red]Invalid input: {e}[/red]")
+            console.print(f"[yellow]Please enter a number between {min_val} and {max_val}[/yellow]")
+        except KeyboardInterrupt:
+            raise  # Allow cancellation
+        except Exception as e:
+            console.print(f"[red]Error: {e}[/red]")
+            console.print("[yellow]Please try again (or press Ctrl+C to cancel)[/yellow]")
 
 
 def prompt_text(
@@ -118,36 +145,57 @@ def prompt_text(
     default: Optional[str] = None,
     multiline: bool = False
 ) -> Optional[str]:
-    """Prompt for text input"""
-    result = prompt(
-        message,
-        default=default or "",
-        multiline=multiline,
-    )
+    """Prompt for text input with error handling"""
     
-    result = result.strip()
-    return result if result else None
+    while True:
+        try:
+            result = prompt(
+                message,
+                default=default or "",
+                multiline=multiline,
+            )
+            
+            result = result.strip()
+            return result if result else None
+        
+        except KeyboardInterrupt:
+            raise  # Allow cancellation
+        except Exception as e:
+            console.print(f"[red]Error: {e}[/red]")
+            console.print("[yellow]Please try again (or press Ctrl+C to cancel)[/yellow]")
 
 
 def prompt_date(
     message: str,
     default: Optional[date] = None
 ) -> date:
-    """Prompt for date input"""
+    """Prompt for date input with retry on error"""
+    
     default_str = default.strftime("%Y-%m-%d") if default else date.today().strftime("%Y-%m-%d")
     
-    result = prompt(
-        message,
-        default=default_str,
-        validator=DateValidator(),
-    )
-    
-    return datetime.strptime(result.strip(), "%Y-%m-%d").date()
+    while True:
+        try:
+            result = prompt(
+                message,
+                default=default_str,
+                validator=DateValidator(),
+            )
+            
+            return datetime.strptime(result.strip(), "%Y-%m-%d").date()
+        
+        except (ValidationError, ValueError) as e:
+            console.print(f"[red]Invalid date: {e}[/red]")
+            console.print("[yellow]Please use YYYY-MM-DD format (e.g., 2025-10-21)[/yellow]")
+        except KeyboardInterrupt:
+            raise  # Allow cancellation
+        except Exception as e:
+            console.print(f"[red]Error: {e}[/red]")
+            console.print("[yellow]Please try again (or press Ctrl+C to cancel)[/yellow]")
 
 
 def prompt_yes_no(message: str, default: bool = True) -> bool:
     """
-    Prompt for yes/no confirmation
+    Prompt for yes/no confirmation with error handling
     
     Args:
         message: Prompt message
@@ -156,10 +204,25 @@ def prompt_yes_no(message: str, default: bool = True) -> bool:
     Returns:
         True if yes, False if no
     """
-    default_str = "Y/n" if default else "y/N"
-    result = prompt(f"{message} [{default_str}]: ").strip().lower()
     
-    if not result:
-        return default
-    
-    return result in ('y', 'yes', 'true', '1')
+    while True:
+        try:
+            default_str = "Y/n" if default else "y/N"
+            result = prompt(f"{message} [{default_str}]: ").strip().lower()
+            
+            if not result:
+                return default
+            
+            if result in ('y', 'yes', 'true', '1'):
+                return True
+            elif result in ('n', 'no', 'false', '0'):
+                return False
+            else:
+                console.print("[yellow]Please answer 'y' or 'n'[/yellow]")
+                continue
+        
+        except KeyboardInterrupt:
+            raise  # Allow cancellation
+        except Exception as e:
+            console.print(f"[red]Error: {e}[/red]")
+            console.print("[yellow]Please try again (or press Ctrl+C to cancel)[/yellow]")

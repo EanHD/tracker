@@ -12,13 +12,13 @@ def show_main_menu():
     console.clear()
     console.print()
     console.print(Panel.fit(
-        "[bold cyan]🎯 Daily Tracker[/bold cyan]\n"
+        "[bold cyan]Tracker🔏[/bold cyan]\n"
         "[dim]Select an option below[/dim]",
         border_style="cyan"
     ))
     console.print()
     console.print("  [bold cyan]1.[/bold cyan] 📝 New Entry")
-    console.print("  [bold cyan]2.[/bold cyan] 👁️  View Entries")
+    console.print("  [bold cyan]2.[/bold cyan] 👁  View Entries")
     console.print("  [bold cyan]3.[/bold cyan] 🔍 Search Entries")
     console.print("  [bold cyan]4.[/bold cyan] 📊 Statistics")
     console.print("  [bold cyan]5.[/bold cyan] 🏆 Achievements")

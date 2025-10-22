@@ -83,8 +83,22 @@ def export(export_format: str, output: str, start_date, end_date, compact: bool)
         if output:
             output_path = Path(output)
         else:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            output_path = Path(f"tracker_export_{timestamp}.{export_format}")
+            # Create human-readable filename
+            today = datetime.now().strftime("%Y-%m-%d")
+            
+            # Add date range if specified
+            if start and end:
+                date_range = f"{start.strftime('%Y-%m-%d')}_to_{end.strftime('%Y-%m-%d')}"
+                output_path = Path(f"tracker_export_{date_range}.{export_format}")
+            elif start:
+                date_range = f"from_{start.strftime('%Y-%m-%d')}"
+                output_path = Path(f"tracker_export_{date_range}.{export_format}")
+            elif end:
+                date_range = f"until_{end.strftime('%Y-%m-%d')}"
+                output_path = Path(f"tracker_export_{date_range}.{export_format}")
+            else:
+                # All time export with today's date
+                output_path = Path(f"tracker_export_all_{today}.{export_format}")
         
         # Show export info
         console.print(f"\n[bold blue]Exporting Data[/bold blue]\n")

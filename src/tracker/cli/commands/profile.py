@@ -60,94 +60,111 @@ def show(lookback_days):
         console.print(Panel(meta_table, title="📈 Tracking Stats", border_style="cyan"))
         
         # Financial personality
+        financial_table = Table(show_header=False, box=None, padding=(0, 2))
+        financial_table.add_column("Label", style="bold")
+        financial_table.add_column("Value")
+        
+        has_financial = False
         if character_sheet.financial_personality:
-            financial_table = Table(show_header=False, box=None, padding=(0, 2))
-            financial_table.add_column("Label", style="bold")
-            financial_table.add_column("Value")
-            
-            if character_sheet.financial_personality.personality:
-                financial_table.add_row("Personality", character_sheet.financial_personality.personality)
-            if character_sheet.financial_personality.income_range:
-                financial_table.add_row("Income range", character_sheet.financial_personality.income_range)
-            if character_sheet.financial_personality.debt_situation:
-                financial_table.add_row("Debt situation", character_sheet.financial_personality.debt_situation)
-            
-            if character_sheet.financial_personality.money_stressors:
-                stressors = ", ".join(character_sheet.financial_personality.money_stressors[:3])
-                if len(character_sheet.financial_personality.money_stressors) > 3:
-                    stressors += "..."
-                financial_table.add_row("Stressors", stressors)
-            
-            if character_sheet.financial_personality.financial_wins:
-                wins = ", ".join(character_sheet.financial_personality.financial_wins[:3])
-                if len(character_sheet.financial_personality.financial_wins) > 3:
-                    wins += "..."
-                financial_table.add_row("Recent wins", wins)
-            
+            financial_table.add_row("Personality", character_sheet.financial_personality)
+            has_financial = True
+        if character_sheet.typical_income_range:
+            financial_table.add_row("Income range", character_sheet.typical_income_range)
+            has_financial = True
+        if character_sheet.debt_situation:
+            financial_table.add_row("Debt situation", character_sheet.debt_situation)
+            has_financial = True
+        
+        if character_sheet.money_stressors:
+            stressors = ", ".join(character_sheet.money_stressors[:3])
+            if len(character_sheet.money_stressors) > 3:
+                stressors += "..."
+            financial_table.add_row("Stressors", stressors)
+            has_financial = True
+        
+        if character_sheet.money_wins:
+            wins = ", ".join(character_sheet.money_wins[:3])
+            if len(character_sheet.money_wins) > 3:
+                wins += "..."
+            financial_table.add_row("Recent wins", wins)
+            has_financial = True
+        
+        if has_financial:
             console.print(Panel(financial_table, title="💰 Financial Profile", border_style="green"))
         
         # Work character
-        if character_sheet.work_character:
-            work_table = Table(show_header=False, box=None, padding=(0, 2))
-            work_table.add_column("Label", style="bold")
-            work_table.add_column("Value")
-            
-            if character_sheet.work_character.work_style:
-                work_table.add_row("Work style", character_sheet.work_character.work_style)
-            if character_sheet.work_character.side_hustle_status:
-                work_table.add_row("Side hustle", character_sheet.work_character.side_hustle_status)
-            
-            if character_sheet.work_character.career_goals:
-                goals = ", ".join(character_sheet.work_character.career_goals[:2])
-                if len(character_sheet.work_character.career_goals) > 2:
-                    goals += "..."
-                work_table.add_row("Career goals", goals)
-            
+        work_table = Table(show_header=False, box=None, padding=(0, 2))
+        work_table.add_column("Label", style="bold")
+        work_table.add_column("Value")
+        
+        has_work = False
+        if character_sheet.work_style:
+            work_table.add_row("Work style", character_sheet.work_style)
+            has_work = True
+        if character_sheet.side_hustle_status:
+            work_table.add_row("Side hustle", character_sheet.side_hustle_status)
+            has_work = True
+        
+        if character_sheet.career_goals:
+            goals = ", ".join(character_sheet.career_goals[:2])
+            if len(character_sheet.career_goals) > 2:
+                goals += "..."
+            work_table.add_row("Career goals", goals)
+            has_work = True
+        
+        if has_work:
             console.print(Panel(work_table, title="💼 Work Profile", border_style="blue"))
         
         # Wellbeing
-        if character_sheet.wellbeing:
-            wellbeing_table = Table(show_header=False, box=None, padding=(0, 2))
-            wellbeing_table.add_column("Label", style="bold")
-            wellbeing_table.add_column("Value")
-            
-            if character_sheet.wellbeing.stress_pattern:
-                wellbeing_table.add_row("Stress pattern", character_sheet.wellbeing.stress_pattern)
-            if character_sheet.wellbeing.baseline_stress is not None:
-                wellbeing_table.add_row("Baseline stress", f"{character_sheet.wellbeing.baseline_stress:.1f}/10")
-            
-            if character_sheet.wellbeing.stress_triggers:
-                triggers = ", ".join(character_sheet.wellbeing.stress_triggers[:3])
-                if len(character_sheet.wellbeing.stress_triggers) > 3:
-                    triggers += "..."
-                wellbeing_table.add_row("Triggers", triggers)
-            
+        wellbeing_table = Table(show_header=False, box=None, padding=(0, 2))
+        wellbeing_table.add_column("Label", style="bold")
+        wellbeing_table.add_column("Value")
+        
+        has_wellbeing = False
+        if character_sheet.stress_pattern:
+            wellbeing_table.add_row("Stress pattern", character_sheet.stress_pattern)
+            has_wellbeing = True
+        if character_sheet.baseline_stress is not None:
+            wellbeing_table.add_row("Baseline stress", f"{character_sheet.baseline_stress:.1f}/10")
+            has_wellbeing = True
+        
+        if character_sheet.stress_triggers:
+            triggers = ", ".join(character_sheet.stress_triggers[:3])
+            if len(character_sheet.stress_triggers) > 3:
+                triggers += "..."
+            wellbeing_table.add_row("Triggers", triggers)
+            has_wellbeing = True
+        
+        if has_wellbeing:
             console.print(Panel(wellbeing_table, title="🧘 Wellbeing Profile", border_style="magenta"))
         
         # Goals
-        if character_sheet.growth_goals:
-            goals_table = Table(show_header=False, box=None, padding=(0, 2))
-            goals_table.add_column("Label", style="bold")
-            goals_table.add_column("Value")
-            
-            if character_sheet.growth_goals.short_term_goals:
-                short = ", ".join(character_sheet.growth_goals.short_term_goals[:2])
-                if len(character_sheet.growth_goals.short_term_goals) > 2:
-                    short += "..."
-                goals_table.add_row("Short-term goals", short)
-            
-            if character_sheet.growth_goals.long_term_goals:
-                long = ", ".join(character_sheet.growth_goals.long_term_goals[:2])
-                if len(character_sheet.growth_goals.long_term_goals) > 2:
-                    long += "..."
-                goals_table.add_row("Long-term goals", long)
-            
+        goals_table = Table(show_header=False, box=None, padding=(0, 2))
+        goals_table.add_column("Label", style="bold")
+        goals_table.add_column("Value")
+        
+        has_goals = False
+        if character_sheet.short_term_goals:
+            short = ", ".join(character_sheet.short_term_goals[:2])
+            if len(character_sheet.short_term_goals) > 2:
+                short += "..."
+            goals_table.add_row("Short-term goals", short)
+            has_goals = True
+        
+        if character_sheet.long_term_aspirations:
+            long = ", ".join(character_sheet.long_term_aspirations[:2])
+            if len(character_sheet.long_term_aspirations) > 2:
+                long += "..."
+            goals_table.add_row("Long-term goals", long)
+            has_goals = True
+        
+        if has_goals:
             console.print(Panel(goals_table, title="🎯 Goals", border_style="yellow"))
         
         # Life patterns
-        if character_sheet.life_patterns and character_sheet.life_patterns.current_priorities:
-            priorities = ", ".join(character_sheet.life_patterns.current_priorities[:3])
-            if len(character_sheet.life_patterns.current_priorities) > 3:
+        if character_sheet.priorities:
+            priorities = ", ".join(character_sheet.priorities[:3])
+            if len(character_sheet.priorities) > 3:
                 priorities += "..."
             console.print(f"\n[bold]Current priorities:[/bold] {priorities}")
         

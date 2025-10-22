@@ -113,15 +113,31 @@ def new(quick, no_feedback, **kwargs):
     if not entry_data:
         return
     
-    # Show preview and confirm
-    display_entry_preview(entry_data)
-    
-    if not click.confirm("\n💾 Save this entry?", default=True):
-        console.print("[yellow]Entry cancelled.[/yellow]")
-        return
-    
-    # Save entry
-    _save_entry(entry_data, no_feedback)
+    # Review and edit loop
+    while True:
+        # Show preview
+        display_entry_preview(entry_data)
+        
+        console.print("\n[bold]What would you like to do?[/bold]")
+        console.print("[1] 💾 Save this entry")
+        console.print("[2] ✏️  Edit a field")
+        console.print("[3] ❌ Cancel")
+        
+        choice = click.prompt("Choose", type=click.Choice(['1', '2', '3']), default='1')
+        
+        if choice == '1':
+            # Save entry
+            _save_entry(entry_data, no_feedback)
+            return
+        elif choice == '3':
+            console.print("[yellow]Entry cancelled.[/yellow]")
+            return
+        else:
+            # Edit a field
+            entry_data = _edit_entry_data(entry_data, quick)
+            if entry_data is None:
+                console.print("[yellow]Entry cancelled.[/yellow]")
+                return
 
 
 def _create_from_flags(kwargs) -> dict:
@@ -213,6 +229,76 @@ def _interactive_entry(quick: bool) -> dict:
     except Exception as e:
         display_error(f"Error during input: {e}")
         return None
+
+
+def _edit_entry_data(entry_data: dict, quick: bool) -> dict:
+    """Allow user to edit specific fields"""
+    
+    # Map field numbers to field names
+    fields = {
+        '1': ('date', '📅 Date', lambda: prompt_date("New date (YYYY-MM-DD): ", default=entry_data['date'])),
+        '2': ('cash_on_hand', '💵 Cash on hand', lambda: prompt_decimal("New cash on hand: $", required=False, allow_negative=True)),
+        '3': ('bank_balance', '🏦 Bank balance', lambda: prompt_decimal("New bank balance: $", required=False, allow_negative=True)),
+        '4': ('income_today', '💰 Income today', lambda: prompt_decimal("New income today: $", default="0")),
+        '5': ('bills_due_today', '📋 Bills due today', lambda: prompt_decimal("New bills due: $", default="0")),
+        '6': ('debts_total', '💳 Total debt', lambda: prompt_decimal("New total debt: $", required=False)),
+        '7': ('hours_worked', '⏰ Hours worked', lambda: prompt_decimal("New hours worked: ", default="0")),
+        '8': ('side_income', '💼 Side income', lambda: prompt_decimal("New side income: $", default="0")),
+        '9': ('food_spent', '🍔 Food spent', lambda: prompt_decimal("New food spent: $", default="0")),
+        '10': ('gas_spent', '⛽ Gas spent', lambda: prompt_decimal("New gas spent: $", default="0")),
+        '11': ('stress_level', '🧘 Stress level', lambda: prompt_integer_range("New stress level (1-10): ", 1, 10)),
+        '12': ('priority', '🎯 Priority', lambda: prompt_text("New priority: ", default="")),
+        '13': ('notes', '📝 Notes', lambda: prompt_text("New notes: ", multiline=False, default="")),
+    }
+    
+    try:
+        console.print("\n[bold cyan]Which field would you like to edit?[/bold cyan]")
+        
+        for num, (key, label, _) in fields.items():
+            current_value = entry_data.get(key)
+            if current_value is not None:
+                if isinstance(current_value, Decimal):
+                    display_val = f"${current_value}" if key not in ['hours_worked'] else str(current_value)
+                else:
+                    display_val = str(current_value)
+            else:
+                display_val = "[dim]not set[/dim]"
+            
+            console.print(f"[{num}] {label}: {display_val}")
+        
+        console.print("[0] ← Go back without changes")
+        
+        choice = click.prompt(
+            "\nField to edit",
+            type=click.Choice(['0'] + list(fields.keys())),
+            default='0'
+        )
+        
+        if choice == '0':
+            return entry_data
+        
+        # Get the field info
+        field_key, field_label, prompt_func = fields[choice]
+        
+        console.print(f"\n[bold]Editing: {field_label}[/bold]")
+        console.print(f"[dim]Current value: {entry_data.get(field_key)}[/dim]")
+        
+        # Get new value
+        new_value = prompt_func()
+        
+        # Update the entry data
+        entry_data[field_key] = new_value
+        
+        console.print(f"[green]✓ Updated {field_label}[/green]\n")
+        
+        return entry_data
+    
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Edit cancelled.[/yellow]")
+        return entry_data
+    except Exception as e:
+        display_error(f"Error editing field: {e}")
+        return entry_data
 
 
 def _save_entry(entry_data: dict, no_feedback: bool = False):

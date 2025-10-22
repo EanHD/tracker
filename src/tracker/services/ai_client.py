@@ -2,21 +2,25 @@
 
 import time
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from tracker.core.models import DailyEntry
+
+if TYPE_CHECKING:
+    from tracker.core.character_sheet import CharacterSheet
 
 
 class AIClient(ABC):
     """Abstract base class for AI clients"""
 
     @abstractmethod
-    def generate_feedback(self, entry: DailyEntry) -> tuple[str, dict]:
+    def generate_feedback(self, entry: DailyEntry, character_sheet: Optional["CharacterSheet"] = None) -> tuple[str, dict]:
         """
         Generate motivational feedback for an entry
         
         Args:
             entry: DailyEntry to generate feedback for
+            character_sheet: Optional character profile for personalized feedback
             
         Returns:
             Tuple of (feedback_content, metadata_dict)
@@ -24,10 +28,18 @@ class AIClient(ABC):
         """
         pass
 
-    def _build_prompt(self, entry: DailyEntry) -> str:
+    def _build_prompt(self, entry: DailyEntry, character_sheet: Optional["CharacterSheet"] = None) -> str:
         """Build motivational feedback prompt from entry data"""
         
-        prompt = f"""Generate supportive, empathetic motivational feedback for this daily financial entry.
+        prompt = ""
+        
+        # Add character context if available
+        if character_sheet:
+            prompt += "# User Character Profile\n\n"
+            prompt += character_sheet.to_ai_context()
+            prompt += "\n\n---\n\n"
+        
+        prompt += f"""# Today's Entry
 
 Date: {entry.date}
 
@@ -56,7 +68,11 @@ Wellbeing:
 
         prompt += """
 
-Guidelines for your response:
+# Your Task
+
+Generate supportive, empathetic motivational feedback for this daily entry.
+
+Guidelines:
 - Be warm, supportive, and genuinely encouraging
 - Acknowledge challenges without toxic positivity
 - Celebrate wins, even small ones
@@ -65,8 +81,16 @@ Guidelines for your response:
 - Focus on effort and resilience, not just outcomes
 - Be concise (2-3 paragraphs max)
 - End with something uplifting or actionable
+"""
 
-Generate the motivational feedback now:"""
+        if character_sheet:
+            prompt += """
+- Use their character profile to make feedback personal and relevant
+- Reference their patterns, goals, and preferences when appropriate
+- Acknowledge their progress toward stated goals
+"""
+
+        prompt += "\nGenerate the motivational feedback now:"
 
         return prompt
 
@@ -86,13 +110,13 @@ class AnthropicClient(AIClient):
             self._client = Anthropic(api_key=self.api_key)
         return self._client
 
-    def generate_feedback(self, entry: DailyEntry) -> tuple[str, dict]:
+    def generate_feedback(self, entry: DailyEntry, character_sheet: Optional["CharacterSheet"] = None) -> tuple[str, dict]:
         """Generate feedback using Claude"""
         
         start_time = time.time()
         
         client = self._get_client()
-        prompt = self._build_prompt(entry)
+        prompt = self._build_prompt(entry, character_sheet)
         
         try:
             response = client.messages.create(
@@ -137,13 +161,13 @@ class OpenAIClient(AIClient):
             self._client = OpenAI(api_key=self.api_key)
         return self._client
 
-    def generate_feedback(self, entry: DailyEntry) -> tuple[str, dict]:
+    def generate_feedback(self, entry: DailyEntry, character_sheet: Optional["CharacterSheet"] = None) -> tuple[str, dict]:
         """Generate feedback using GPT"""
         
         start_time = time.time()
         
         client = self._get_client()
-        prompt = self._build_prompt(entry)
+        prompt = self._build_prompt(entry, character_sheet)
         
         try:
             response = client.chat.completions.create(
@@ -196,13 +220,13 @@ class OpenRouterClient(AIClient):
             )
         return self._client
 
-    def generate_feedback(self, entry: DailyEntry) -> tuple[str, dict]:
+    def generate_feedback(self, entry: DailyEntry, character_sheet: Optional["CharacterSheet"] = None) -> tuple[str, dict]:
         """Generate feedback using OpenRouter"""
         
         start_time = time.time()
         
         client = self._get_client()
-        prompt = self._build_prompt(entry)
+        prompt = self._build_prompt(entry, character_sheet)
         
         try:
             response = client.chat.completions.create(
@@ -255,13 +279,13 @@ class LocalClient(AIClient):
             )
         return self._client
 
-    def generate_feedback(self, entry: DailyEntry) -> tuple[str, dict]:
+    def generate_feedback(self, entry: DailyEntry, character_sheet: Optional["CharacterSheet"] = None) -> tuple[str, dict]:
         """Generate feedback using local AI server"""
         
         start_time = time.time()
         
         client = self._get_client()
-        prompt = self._build_prompt(entry)
+        prompt = self._build_prompt(entry, character_sheet)
         
         try:
             response = client.chat.completions.create(

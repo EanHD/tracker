@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from tracker.core.models import AIFeedback, DailyEntry
 from tracker.services.ai_client import create_ai_client
+from tracker.services.character_service import CharacterSheetService
 
 
 class FeedbackService:
@@ -115,8 +116,20 @@ class FeedbackService:
                     local_api_url=local_api_url
                 )
                 
-                # Generate feedback
-                content, metadata = ai_client.generate_feedback(entry)
+                # Load character sheet for personalized feedback
+                character_service = CharacterSheetService(self.db)
+                try:
+                    character_sheet = character_service.analyze_and_update_profile(
+                        user_id=entry.user_id,
+                        lookback_days=30
+                    )
+                except Exception as e:
+                    # If character sheet fails, continue without it
+                    # (allows system to work before profile is built)
+                    character_sheet = None
+                
+                # Generate feedback with character context
+                content, metadata = ai_client.generate_feedback(entry, character_sheet)
                 
                 # Update feedback record
                 feedback.content = content
@@ -201,3 +214,53 @@ class FeedbackService:
             model,
             local_api_url
         )
+
+    def generate_feedback(
+        self,
+        entry_id: int,
+        regenerate: bool = False,
+    ) -> AIFeedback:
+        """
+        Convenience method to generate feedback using config from environment
+        
+        Args:
+            entry_id: ID of the entry
+            regenerate: Whether to regenerate existing feedback
+            
+        Returns:
+            AIFeedback record
+            
+        Raises:
+            ValueError: If AI configuration is missing or invalid
+        """
+        import os
+        from tracker.config import AI_PROVIDER, AI_API_KEY, AI_MODEL, LOCAL_API_URL
+        
+        # Validate config
+        provider = AI_PROVIDER or os.getenv("AI_PROVIDER", "local")
+        
+        if provider != "local":
+            api_key = AI_API_KEY or os.getenv("AI_API_KEY")
+            if not api_key:
+                raise ValueError(f"AI_API_KEY required for provider '{provider}'")
+        else:
+            api_key = None
+        
+        model = AI_MODEL or os.getenv("AI_MODEL")
+        local_api_url = LOCAL_API_URL or os.getenv("LOCAL_API_URL", "http://localhost:11434/v1")
+        
+        # Check if feedback exists
+        if not regenerate:
+            existing = self.get_feedback_by_entry(entry_id)
+            if existing and existing.status == "completed":
+                return existing
+        
+        # Generate or regenerate
+        return self.regenerate_feedback(
+            entry_id=entry_id,
+            provider=provider,
+            api_key=api_key,
+            model=model,
+            local_api_url=local_api_url
+        )
+

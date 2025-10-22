@@ -186,3 +186,60 @@ class ConversationLog(Base):
     __table_args__ = (
         Index("ix_conversation_logs_feedback_timestamp", "feedback_id", "timestamp"),
     )
+
+
+class UserProfile(Base):
+    """User character sheet / profile for personalized AI context"""
+
+    __tablename__ = "user_profiles"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    
+    # Financial Character (JSON stored as Text)
+    financial_personality = Column(String(500), nullable=True)
+    typical_income_range = Column(String(100), nullable=True)
+    debt_situation = Column(String(500), nullable=True)
+    money_stressors = Column(Text, nullable=True)  # JSON array
+    money_wins = Column(Text, nullable=True)  # JSON array
+    
+    # Work Character
+    work_style = Column(String(500), nullable=True)
+    side_hustle_status = Column(String(500), nullable=True)
+    career_goals = Column(Text, nullable=True)  # JSON array
+    work_challenges = Column(Text, nullable=True)  # JSON array
+    
+    # Wellbeing Character
+    stress_pattern = Column(String(500), nullable=True)
+    stress_triggers = Column(Text, nullable=True)  # JSON array
+    coping_mechanisms = Column(Text, nullable=True)  # JSON array
+    baseline_stress = Column(Float, default=5.0, nullable=False)
+    
+    # Life Patterns
+    priorities = Column(Text, nullable=True)  # JSON array
+    recurring_themes = Column(Text, nullable=True)  # JSON array
+    celebration_moments = Column(Text, nullable=True)  # JSON array
+    ongoing_challenges = Column(Text, nullable=True)  # JSON array
+    
+    # Growth & Goals
+    short_term_goals = Column(Text, nullable=True)  # JSON array
+    long_term_aspirations = Column(Text, nullable=True)  # JSON array
+    recent_growth = Column(Text, nullable=True)  # JSON array
+    
+    # Preferences
+    communication_style = Column(String(500), nullable=True)
+    feedback_preferences = Column(String(500), nullable=True)
+    
+    # Meta
+    total_entries = Column(Integer, default=0, nullable=False)
+    entry_streak = Column(Integer, default=0, nullable=False)
+    longest_streak = Column(Integer, default=0, nullable=False)
+    last_entry_date = Column(Date, nullable=True)
+    
+    # Version for tracking profile evolution
+    profile_version = Column(Integer, default=1, nullable=False)
+    
+    # Relationship
+    user = relationship("User")

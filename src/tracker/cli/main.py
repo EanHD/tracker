@@ -64,6 +64,7 @@ from tracker.cli.commands.list import list
 from tracker.cli.commands.mcp import mcp
 from tracker.cli.commands.new import new
 from tracker.cli.commands.onboard import onboard
+from tracker.cli.commands.retry import retry
 from tracker.cli.commands.search import search
 from tracker.cli.commands.server import server
 from tracker.cli.commands.show import show
@@ -81,6 +82,7 @@ cli.add_command(config)
 cli.add_command(onboard)
 cli.add_command(server)
 cli.add_command(mcp)
+cli.add_command(retry)
 
 
 if __name__ == "__main__":

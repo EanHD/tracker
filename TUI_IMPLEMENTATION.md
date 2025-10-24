@@ -122,27 +122,26 @@ Users can:
 
 ## Documentation Created
 
-### 1. TUI Mode Guide (`docs/TUI_MODE.md`)
-- Complete TUI usage documentation
-- Navigation guide
-- Screen descriptions
-- Keyboard shortcuts
-- Tips and troubleshooting
-- Architecture overview
+### 1. TUI Implementation Guide (`TUI_IMPLEMENTATION.md`)
+- This document: architecture overview, navigation model, screen catalogue
+- Keyboard shortcuts and interaction patterns
+- Troubleshooting tips and developer notes
 
-### 2. Usage Modes Comparison (`docs/USAGE_MODES.md`)
-- Comparison of all three modes
-- Use case recommendations
-- Performance metrics
-- Decision trees
-- Combined workflows
-- Migration paths
+### 2. Narrow Terminal Guide (`TUI_NARROW_TERMINAL_GUIDE.md`)
+- Layout adjustments under 80 columns
+- Collapsed tables and responsive prompts
+- Testing instructions using the `COLUMNS=60 tracker tui` workflow
 
-### 3. README Updates
+### 3. Responsive Design Notes (`TUI_RESPONSIVE_DESIGN.md`)
+- Breakpoint strategy for the TUI
+- Guidance for adding new panels/components
+- Accessibility considerations for plain/no-emoji modes
+
+### 4. README Updates
 - Added TUI mention in features
 - Updated quick start with TUI example
 - Added usage modes section
-- Links to documentation
+- Links to documentation and chat workflows
 
 ## File Structure
 
@@ -165,8 +164,15 @@ src/tracker/cli/
     └── tui.py                     # TUI command registration
 
 docs/
-├── TUI_MODE.md                    # TUI documentation
-└── USAGE_MODES.md                 # Mode comparison
+├── AI_FEEDBACK_FORMATTING.md      # AI output guidelines
+├── ARCHITECTURE.md                # High-level architecture
+├── TUI_MENU_FIXES.md              # Recent console bug fixes
+└── USER_GUIDE.md                  # Comprehensive user manual
+
+root/
+├── TUI_IMPLEMENTATION.md          # Full implementation summary
+├── TUI_NARROW_TERMINAL_GUIDE.md   # Narrow terminal instructions
+└── TUI_RESPONSIVE_DESIGN.md       # Responsive layout guidance
 ```
 
 ## Usage Examples

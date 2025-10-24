@@ -49,7 +49,7 @@
 - Can run CLI, TUI, and server simultaneously
 
 ### Documentation
-- docs/TUI_MODE.md - Complete TUI usage guide
-- docs/USAGE_MODES.md - Mode comparison and recommendations
+- TUI_IMPLEMENTATION.md - Complete TUI usage guide
+- TUI_RESPONSIVE_DESIGN.md - Mode comparison and responsive recommendations
 - docs/ARCHITECTURE.md - System architecture
 - QUICK_REFERENCE.md - Quick reference card

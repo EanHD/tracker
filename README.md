@@ -182,7 +182,7 @@ Navigate with arrow keys, use hotkeys (`n` for new entry, `v` to view, etc.), an
 - Viewing statistics and achievements
 - Learning available features
 
-[📖 Full TUI Documentation](docs/TUI_MODE.md)
+[📖 Full TUI Documentation](TUI_IMPLEMENTATION.md)
 
 ### 2. CLI Commands (Power Users & Automation)
 

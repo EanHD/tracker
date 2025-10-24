@@ -191,9 +191,9 @@ tracker server --port 8080
 
 ## 📚 Documentation Links
 
-- Full TUI Guide: `docs/TUI_MODE.md`
-- Mode Comparison: `docs/USAGE_MODES.md`
-- API Docs: `docs/API.md`
+- Full TUI Guide: `TUI_IMPLEMENTATION.md`
+- Responsive Layout Tips: `TUI_RESPONSIVE_DESIGN.md`
+- API Docs: `docs/API_DOCUMENTATION.md`
 - README: `README.md`
 
 ## 💡 Tips

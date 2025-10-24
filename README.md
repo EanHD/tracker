@@ -182,7 +182,7 @@ Navigate with arrow keys, use hotkeys (`n` for new entry, `v` to view, etc.), an
 - Viewing statistics and achievements
 - Learning available features
 
-[📖 Full TUI Documentation](TUI_IMPLEMENTATION.md)
+[📖 TUI Tips](docs/USER_GUIDE.md#interactive-tui-mode)
 
 ### 2. CLI Commands (Power Users & Automation)
 
@@ -223,7 +223,7 @@ Build your own frontend or integrate with other tools:
 - Full CRUD operations
 - Real-time AI feedback endpoints
 
-[📖 API Documentation](docs/API.md)
+- [API Documentation](docs/API_DOCUMENTATION.md)
 
 ## 📚 Documentation
 
@@ -337,7 +337,7 @@ The AI uses your profile to provide:
 **With Profile (Personal Mode, 12-day streak):**
 > "Hey Sarah! 12 days in a row—you're crushing it! I know tight finances have been stressing you out, but you kept it together today. Your $5k emergency fund is 60% there. At this rate, you'll hit it by May. One day at a time! 💪"
 
-📖 **Learn more**: See [USER_PROFILE_SYSTEM.md](USER_PROFILE_SYSTEM.md) for full details.
+📖 **Learn more**: See `docs/USER_GUIDE.md#profile-system` for full details.
 
 ## 🧠 Philosophy Engine - AI Mentor System
 
@@ -381,7 +381,7 @@ The AI automatically:
 | **Balance & Health** | Rest Well Decide Well, Align with Values |
 | **Behavioral Economics** | Momentum Over Math, Simplify Goals |
 
-📖 **Learn more**: See [PHILOSOPHY_ENGINE.md](PHILOSOPHY_ENGINE.md) for full documentation.
+📖 **Learn more**: See `docs/USER_GUIDE.md#philosophy-engine` for full documentation.
 
 ## 🏗️ Architecture
 

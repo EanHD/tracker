@@ -6,7 +6,7 @@
 - **AI Conversations**: Dedicated `tracker chat` command group plus TUI chat menu with transcript viewer and context-rich conversations.
 - **Profile Enhancements**: Field-by-field editing, confirmation flow, and shared logic between CLI and TUI for consistent updates.
 - **Philosophy Engine**: Context service and reference docs that bring curated financial principles into AI guidance.
-- **Documentation Set**: Comprehensive reference guides (`PHILOSOPHY_*`, `PROFILE_*`, `USER_PROFILE_SYSTEM.md`, `TUI_*`) now tracked and curated for contributors.
+- **Documentation Refresh**: Consolidated chat, profile, TUI, and philosophy guidance into the primary user guide (`docs/USER_GUIDE.md`).
 
 ### Changed
 - **TUI Experience**: Chats, statistics, achievements, configuration, export, and profile screens now use shared console helpers; chat screen preserves history while the AI responds.
@@ -49,7 +49,6 @@
 - Can run CLI, TUI, and server simultaneously
 
 ### Documentation
-- TUI_IMPLEMENTATION.md - Complete TUI usage guide
-- TUI_RESPONSIVE_DESIGN.md - Mode comparison and responsive recommendations
-- docs/ARCHITECTURE.md - System architecture
-- QUICK_REFERENCE.md - Quick reference card
+- Comprehensive TUI usage guide and mode comparisons
+- Architecture overview (`docs/ARCHITECTURE.md`)
+- Quick reference card (`QUICK_REFERENCE.md`)

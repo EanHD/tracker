@@ -11,7 +11,7 @@
 2. [Interactive TUI Mode](#interactive-tui-mode)
 3. [Daily Workflow](#daily-workflow)
 4. [Command Reference](#command-reference)
-5. [AI Feedback](#ai-feedback)
+5. [Advanced Features](#advanced-features)
 6. [Chat System](#chat-system)
 7. [Profile System](#profile-system)
 8. [Philosophy Engine](#philosophy-engine)
@@ -176,7 +176,14 @@ The TUI provides:
 - **Configuration**: Manage settings
 - **Profile**: View and update your user profile
 
-**Mobile/Narrow Terminal Support**: The TUI automatically adapts to narrow terminals (useful for mobile terminal emulators like Termius).
+**Navigation Tips**
+- Press highlighted **hotkeys** (`n`, `v`, `s`, `t`, `a`, `c`, `e`, `p`, `h`) from anywhere in the menu to jump directly to a screen.
+- Use `Ctrl+S` to save forms, `Esc` to step back, and `/` to open inline search where available.
+
+**Mobile/Narrow Terminal Support**
+- Tracker collapses wide tables automatically when `COLUMNS < 80`; test layouts with `COLUMNS=60 tracker tui`.
+- Long text fields wrap cleanly thanks to `wrap_lines=True`, so you can type multi-line notes without horizontal scrolling.
+- Chats, statistics, and profile editors all fall back to condensed layouts that keep high-priority information visible first.
 
 ---
 
@@ -639,6 +646,62 @@ src/tracker/services/ai_client.py
 ```
 
 Look for the `generate_feedback()` method and customize the system prompt to match your preferences.
+
+---
+
+## Chat System
+
+Tracker includes a fully persistent AI chat experience that works alongside your daily entries.
+
+### Starting Conversations
+- `tracker chat new` — create a standalone chat with an optional custom title.
+- `tracker chat new --entry-id 42` — open or create the conversation linked to Entry #42.
+- From the TUI main menu choose **Chats** to browse, resume, or start conversations without leaving the interface.
+
+### Managing History
+- `tracker chat list` displays both standalone and entry-linked chats with message counts.
+- `tracker chat open <id>` resumes any conversation; use `exit`, `clear`, or `transcript` inside the loop for quick actions.
+- Each chat supports rich Markdown replies, continues seamlessly after view/search/ retry flows, and offers transcript viewing through a pager for longer sessions.
+
+### Context Awareness
+- Chats automatically load your user profile (nickname, tone preference, stress triggers, calming activities).
+- Standalone chats include a seven-day activity summary; entry-linked chats include the full entry details (financials, wellbeing notes, priorities).
+- The TUI keeps the existing conversation visible while the AI is thinking and re-displays the prompt hint after each response for a clean flow.
+
+---
+
+## Profile System
+
+The profile keeps Tracker's coaching personal and consistent across feedback, chats, and philosophy guidance.
+
+### Key Commands
+- `tracker profile view` — review all saved details at a glance.
+- `tracker profile update` — choose specific sections (Basics, Work, Financial, Goals, Wellbeing) and edit fields individually.
+- `tracker onboard` or `tracker profile setup` — run the guided wizard with confirmation prompts if you prefer a step-by-step experience.
+- TUI main menu → **Profile** → Option 5 enables field-by-field edits using the same validation as the CLI.
+
+### Profile Fields
+- **Basics**: nickname, preferred tone (`casual`, `professional`, `encouraging`, `stoic`), desired context depth (`basic`, `personal`, `deep`).
+- **Wellbeing**: baseline stress/energy levels, calming activities, stress triggers.
+- **Work & Goals**: role, focus areas, financial targets, motivators.
+- Recent improvements keep the current values visible during editing, support list-style updates, and ensure every CLI/TUI path writes to the same service layer.
+
+### Why It Matters
+- AI feedback and chat conversations read these fields before responding, so keeping them accurate produces more relevant coaching.
+- The retry command (`tracker retry`) and chat context builder reuse the same data to maintain tone consistency across interactions.
+
+---
+
+## Philosophy Engine
+
+Tracker’s Philosophy Engine gives the AI a mentor-like voice grounded in practical financial wisdom.
+
+- **Categories (7)**: Financial Discipline, Wealth Mindset, Habit Building, Emotional Intelligence, Balance & Health, Behavioral Economics, and Mindset & Growth. Each category bundles proven principles from leaders like Dave Ramsey and Robert Kiyosaki.
+- **Life Phases (4)**: Debt Payoff, Stability, Growth, and Legacy. The engine detects your current phase from recent entries (e.g., debt levels, savings progress) and prioritizes the most relevant principles.
+- **Communication Tones (7)**: Encouraging, Honest, Analytical, Friendly, Firm, Compassionate, Motivational. Tones shift automatically based on stress, energy, and progress streaks.
+- **Context Pipeline**: The profile service and recent entry summary feed the Philosophy Context Service, which selects matching principles and tone. The feedback service then blends them into AI prompts so responses feel empathetic, actionable, and phase-appropriate.
+
+You do not need to configure anything manually—stay consistent with logging entries and keeping your profile current, and the philosophy engine adapts behind the scenes.
 
 ---
 

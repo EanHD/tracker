@@ -70,6 +70,14 @@ tracker server --port 5703
 tracker mcp     # Start MCP server
 ```
 
+### Chat
+```bash
+tracker chat new          # Start a standalone conversation
+tracker chat new --entry-id 42  # Attach chat to Entry #42
+tracker chat list         # Show conversations
+tracker chat open 5       # Resume chat ID 5
+```
+
 ## 🎯 Common Workflows
 
 ### Daily Entry (TUI)

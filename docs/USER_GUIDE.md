@@ -1,18 +1,21 @@
 # Daily Tracker - User Guide
 
 **Version:** 1.0.0  
-**Last Updated:** October 21, 2025
+**Last Updated:** October 24, 2025
 
 ---
 
 ## Table of Contents
 
 1. [Getting Started](#getting-started)
-2. [Daily Workflow](#daily-workflow)
-3. [Command Reference](#command-reference)
-4. [Advanced Features](#advanced-features)
-5. [Troubleshooting](#troubleshooting)
-6. [FAQ](#faq)
+2. [Interactive TUI Mode](#interactive-tui-mode)
+3. [Daily Workflow](#daily-workflow)
+4. [Command Reference](#command-reference)
+5. [AI Feedback](#ai-feedback)
+6. [Chat System](#chat-system)
+7. [Profile System](#profile-system)
+8. [Philosophy Engine](#philosophy-engine)
+9. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -150,6 +153,30 @@ You'll be prompted for:
 - **Notes**: Priority task, daily reflection
 
 After submitting, the AI will generate personalized feedback based on your entry!
+
+---
+
+## Interactive TUI Mode
+
+Daily Tracker now features a full interactive TUI (Text User Interface) for easier navigation:
+
+```bash
+# Launch interactive mode
+tracker tui
+```
+
+The TUI provides:
+- **Main Menu**: Easy navigation to all features
+- **New Entry**: Guided form for creating entries
+- **View Entries**: Browse recent entries (last 30 days)
+- **Search**: Find entries by date, keywords, or filters
+- **Chats**: Access AI chat conversations
+- **Statistics**: View your tracking analytics
+- **Achievements**: Check progress and streaks
+- **Configuration**: Manage settings
+- **Profile**: View and update your user profile
+
+**Mobile/Narrow Terminal Support**: The TUI automatically adapts to narrow terminals (useful for mobile terminal emulators like Termius).
 
 ---
 
@@ -371,6 +398,29 @@ Search entries by keywords with highlighting.
 tracker search "productive"
 tracker search "meeting"
 tracker search "stress" --limit 50
+```
+
+#### `tracker retry` - Retry AI Feedback Generation
+
+Regenerate AI feedback for an entry when initial generation fails.
+
+```bash
+tracker retry                  # Retry today's entry
+tracker retry yesterday        # Retry yesterday
+tracker retry 2025-10-23      # Retry specific date
+tracker retry -1              # Retry 1 day ago
+```
+
+**When to use:**
+- Initial feedback generation failed
+- Want fresh feedback with updated configuration
+- AI service was temporarily unavailable
+
+**Tips on failure:**
+1. Check your AI configuration: `tracker config show`
+2. Verify API key is valid
+3. Ensure AI service is running (for local providers)
+4. Try again after a moment
 ```
 
 **Features:**

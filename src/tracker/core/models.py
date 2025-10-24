@@ -40,6 +40,7 @@ class User(Base):
 
     # Relationships
     entries = relationship("DailyEntry", back_populates="user", cascade="all, delete-orphan")
+    chats = relationship("Chat", back_populates="user", cascade="all, delete-orphan")
 
 
 class DailyEntry(Base):
@@ -74,6 +75,7 @@ class DailyEntry(Base):
     # Relationships
     user = relationship("User", back_populates="entries")
     feedback = relationship("AIFeedback", back_populates="entry", uselist=False)
+    chat = relationship("Chat", back_populates="entry", uselist=False, cascade="all, delete-orphan")
 
     # Constraints
     __table_args__ = (
@@ -198,48 +200,175 @@ class UserProfile(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
-    # Financial Character (JSON stored as Text)
-    financial_personality = Column(String(500), nullable=True)
-    typical_income_range = Column(String(100), nullable=True)
-    debt_situation = Column(String(500), nullable=True)
-    money_stressors = Column(Text, nullable=True)  # JSON array
-    money_wins = Column(Text, nullable=True)  # JSON array
+    # Basic Info
+    nickname = Column(String(100), nullable=True)
+    preferred_tone = Column(String(50), nullable=True)  # casual, professional, encouraging, stoic
+    context_depth = Column(String(20), default="basic", nullable=False)  # basic, personal, deep
     
-    # Work Character
-    work_style = Column(String(500), nullable=True)
-    side_hustle_status = Column(String(500), nullable=True)
-    career_goals = Column(Text, nullable=True)  # JSON array
-    work_challenges = Column(Text, nullable=True)  # JSON array
+    # Work Setup (encrypted)
+    work_info_encrypted = Column(Text, nullable=True)  # JSON: job title, hourly/salary, pay schedule, hours, commute
     
-    # Wellbeing Character
-    stress_pattern = Column(String(500), nullable=True)
+    # Financial Overview (encrypted)
+    financial_info_encrypted = Column(Text, nullable=True)  # JSON: income sources, net pay, bills, debts
+    
+    # Goals (encrypted)
+    goals_encrypted = Column(Text, nullable=True)  # JSON: short-term and long-term goals
+    
+    # Lifestyle (encrypted)
+    lifestyle_encrypted = Column(Text, nullable=True)  # JSON: gym, gas usage, meals out, etc.
+    
+    # Emotional Context
     stress_triggers = Column(Text, nullable=True)  # JSON array
-    coping_mechanisms = Column(Text, nullable=True)  # JSON array
+    calming_activities = Column(Text, nullable=True)  # JSON array
+    baseline_energy = Column(Integer, default=5, nullable=False)  # 1-10 scale
     baseline_stress = Column(Float, default=5.0, nullable=False)
     
-    # Life Patterns
-    priorities = Column(Text, nullable=True)  # JSON array
-    recurring_themes = Column(Text, nullable=True)  # JSON array
-    celebration_moments = Column(Text, nullable=True)  # JSON array
-    ongoing_challenges = Column(Text, nullable=True)  # JSON array
-    
-    # Growth & Goals
-    short_term_goals = Column(Text, nullable=True)  # JSON array
-    long_term_aspirations = Column(Text, nullable=True)  # JSON array
-    recent_growth = Column(Text, nullable=True)  # JSON array
+    # AI-Detected Patterns (not user-entered)
+    detected_patterns_encrypted = Column(Text, nullable=True)  # JSON: themes AI notices over time
     
     # Preferences
     communication_style = Column(String(500), nullable=True)
-    feedback_preferences = Column(String(500), nullable=True)
+    reminder_preferences = Column(Text, nullable=True)  # JSON: when to get reminders
     
     # Meta
     total_entries = Column(Integer, default=0, nullable=False)
     entry_streak = Column(Integer, default=0, nullable=False)
     longest_streak = Column(Integer, default=0, nullable=False)
     last_entry_date = Column(Date, nullable=True)
+    last_monthly_checkin = Column(Date, nullable=True)
     
     # Version for tracking profile evolution
     profile_version = Column(Integer, default=1, nullable=False)
     
     # Relationship
     user = relationship("User")
+    
+    @property
+    def work_info(self) -> Optional[dict]:
+        """Decrypt work_info"""
+        if self.work_info_encrypted:
+            import json
+            return json.loads(encryption_service.decrypt(self.work_info_encrypted))
+        return None
+    
+    @work_info.setter
+    def work_info(self, value: Optional[dict]):
+        """Encrypt work_info"""
+        if value is not None:
+            import json
+            self.work_info_encrypted = encryption_service.encrypt(json.dumps(value))
+        else:
+            self.work_info_encrypted = None
+    
+    @property
+    def financial_info(self) -> Optional[dict]:
+        """Decrypt financial_info"""
+        if self.financial_info_encrypted:
+            import json
+            return json.loads(encryption_service.decrypt(self.financial_info_encrypted))
+        return None
+    
+    @financial_info.setter
+    def financial_info(self, value: Optional[dict]):
+        """Encrypt financial_info"""
+        if value is not None:
+            import json
+            self.financial_info_encrypted = encryption_service.encrypt(json.dumps(value))
+        else:
+            self.financial_info_encrypted = None
+    
+    @property
+    def goals(self) -> Optional[dict]:
+        """Decrypt goals"""
+        if self.goals_encrypted:
+            import json
+            return json.loads(encryption_service.decrypt(self.goals_encrypted))
+        return None
+    
+    @goals.setter
+    def goals(self, value: Optional[dict]):
+        """Encrypt goals"""
+        if value is not None:
+            import json
+            self.goals_encrypted = encryption_service.encrypt(json.dumps(value))
+        else:
+            self.goals_encrypted = None
+    
+    @property
+    def lifestyle(self) -> Optional[dict]:
+        """Decrypt lifestyle"""
+        if self.lifestyle_encrypted:
+            import json
+            return json.loads(encryption_service.decrypt(self.lifestyle_encrypted))
+        return None
+    
+    @lifestyle.setter
+    def lifestyle(self, value: Optional[dict]):
+        """Encrypt lifestyle"""
+        if value is not None:
+            import json
+            self.lifestyle_encrypted = encryption_service.encrypt(json.dumps(value))
+        else:
+            self.lifestyle_encrypted = None
+    
+    @property
+    def detected_patterns(self) -> Optional[dict]:
+        """Decrypt detected_patterns"""
+        if self.detected_patterns_encrypted:
+            import json
+            return json.loads(encryption_service.decrypt(self.detected_patterns_encrypted))
+        return None
+    
+    @detected_patterns.setter
+    def detected_patterns(self, value: Optional[dict]):
+        """Encrypt detected_patterns"""
+        if value is not None:
+            import json
+            self.detected_patterns_encrypted = encryption_service.encrypt(json.dumps(value))
+        else:
+            self.detected_patterns_encrypted = None
+
+
+class Chat(Base):
+    """Chat conversation model - can be linked to an entry or standalone"""
+    
+    __tablename__ = "chats"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    entry_id = Column(Integer, ForeignKey("daily_entries.id", ondelete="CASCADE"), nullable=True, index=True)
+    
+    # Chat metadata
+    title = Column(String(500), nullable=False)  # Human-readable title
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    
+    # Relationships
+    user = relationship("User", back_populates="chats")
+    entry = relationship("DailyEntry", back_populates="chat")
+    messages = relationship("ChatMessage", back_populates="chat", cascade="all, delete-orphan", order_by="ChatMessage.created_at")
+    
+    __table_args__ = (
+        Index("ix_chats_user_created", "user_id", "created_at"),
+    )
+
+
+class ChatMessage(Base):
+    """Individual messages in a chat conversation"""
+    
+    __tablename__ = "chat_messages"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    chat_id = Column(Integer, ForeignKey("chats.id", ondelete="CASCADE"), nullable=False, index=True)
+    
+    # Message content
+    role = Column(SQLEnum("user", "assistant", "system", name="message_role"), nullable=False)
+    content = Column(Text, nullable=False)  # Encrypted if sensitive
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    
+    # Relationship
+    chat = relationship("Chat", back_populates="messages")
+    
+    __table_args__ = (
+        Index("ix_chat_messages_chat_created", "chat_id", "created_at"),
+    )

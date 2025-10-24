@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.2.0] - 2025-10-25
+
+### Added
+- **AI Conversations**: Dedicated `tracker chat` command group plus TUI chat menu with transcript viewer and context-rich conversations.
+- **Profile Enhancements**: Field-by-field editing, confirmation flow, and shared logic between CLI and TUI for consistent updates.
+- **Philosophy Engine**: Context service and reference docs that bring curated financial principles into AI guidance.
+- **Documentation Set**: Comprehensive reference guides (`PHILOSOPHY_*`, `PROFILE_*`, `USER_PROFILE_SYSTEM.md`, `TUI_*`) now tracked and curated for contributors.
+
+### Changed
+- **TUI Experience**: Chats, statistics, achievements, configuration, export, and profile screens now use shared console helpers; chat screen preserves history while the AI responds.
+- **CLI Polishing**: Rich spinners during AI calls, consistent emoji/icon usage, and accessible console configuration across commands.
+- **Quick Reference**: Expanded with chat workflow cheatsheet and updated recommendations for newcomers.
+- **README**: Expanded Quick Start with chat usage, clarified mode guidance, and highlighted multi-provider AI setup.
+
+### Fixed
+- Ensured TUI chat prompt no longer flickers when waiting for responses.
+- Removed stray cached bytecode, export artifacts, and other local-only files from the repository view.
+- Normalized money input defaults and wrapped multiline prompts for better terminal readability.
+
 ## [0.1.0] - 2024-10-22
 
 ### Added

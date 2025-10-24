@@ -7,11 +7,11 @@ from pathlib import Path
 from typing import Dict, Optional, Any
 
 import click
-from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
 from rich.prompt import Confirm
+from rich.table import Table
 
+from tracker.cli.ui.console import emphasize, get_console, icon
 from tracker.cli.ui.prompts import (
     prompt_text,
     prompt_decimal,
@@ -21,8 +21,6 @@ from tracker.config import settings
 from tracker.core.database import SessionLocal
 from tracker.core.models import User
 from tracker.services.entry_service import EntryService
-
-console = Console()
 
 
 @click.command()
@@ -37,8 +35,11 @@ def onboard(reset):
     4. Wellbeing baseline
     5. Budget targets
     """
+    console = get_console()
     
-    console.print("\n[bold blue]🚀 Welcome to Tracker Onboarding![/bold blue]\n")
+    console.print(
+        f"\n[bold blue]{icon('🚀', 'Start')} Welcome to Tracker Onboarding![/bold blue]\n"
+    )
     console.print("This wizard will help you set up your tracker system.\n")
     
     if not reset:
@@ -48,56 +49,83 @@ def onboard(reset):
     config = {}
     
     # Step 1: System Configuration
-    console.print(Panel.fit(
-        "[bold cyan]Step 1/6: System Configuration[/bold cyan]",
-        border_style="cyan"
-    ))
+    console.print(
+        Panel.fit(
+            f"[bold cyan]{icon('🛠️', 'Step')} Step 1/6: System Configuration[/bold cyan]",
+            border_style="cyan",
+        )
+    )
     config["system"] = collect_system_config(reset)
     
     # Step 2: AI Provider Setup
-    console.print("\n" + Panel.fit(
-        "[bold cyan]Step 2/6: AI Provider Setup[/bold cyan]",
-        border_style="cyan"
-    ))
+    console.print(
+        "\n"
+        + Panel.fit(
+            f"[bold cyan]{icon('🤖', 'AI')} Step 2/6: AI Provider Setup[/bold cyan]",
+            border_style="cyan",
+        )
+    )
     config["ai"] = collect_ai_config(reset)
     
     # Step 3: Financial Baseline
-    console.print("\n" + Panel.fit(
-        "[bold cyan]Step 3/6: Financial Baseline[/bold cyan]",
-        border_style="cyan"
-    ))
+    console.print(
+        "\n"
+        + Panel.fit(
+            f"[bold cyan]{icon('💰', 'Finance')} Step 3/6: Financial Baseline[/bold cyan]",
+            border_style="cyan",
+        )
+    )
     config["financial"] = collect_financial_baseline(reset)
     
     # Step 4: Wellbeing Baseline
-    console.print("\n" + Panel.fit(
-        "[bold cyan]Step 4/6: Wellbeing Baseline[/bold cyan]",
-        border_style="cyan"
-    ))
+    console.print(
+        "\n"
+        + Panel.fit(
+            f"[bold cyan]{icon('🧘', 'Wellbeing')} Step 4/6: Wellbeing Baseline[/bold cyan]",
+            border_style="cyan",
+        )
+    )
     config["wellbeing"] = collect_wellbeing_baseline(reset)
     
     # Step 5: Budget Targets
-    console.print("\n" + Panel.fit(
-        "[bold cyan]Step 5/6: Budget Targets[/bold cyan]",
-        border_style="cyan"
-    ))
+    console.print(
+        "\n"
+        + Panel.fit(
+            f"[bold cyan]{icon('📊', 'Budgets')} Step 5/6: Budget Targets[/bold cyan]",
+            border_style="cyan",
+        )
+    )
     config["budgets"] = collect_budget_targets(reset)
     
     # Step 6: Confirmation & Summary
-    console.print("\n" + Panel.fit(
-        "[bold cyan]Step 6/6: Confirm & Apply[/bold cyan]",
-        border_style="cyan"
-    ))
+    console.print(
+        "\n"
+        + Panel.fit(
+            f"[bold cyan]{icon('✅', 'Confirm')} Step 6/6: Confirm & Apply[/bold cyan]",
+            border_style="cyan",
+        )
+    )
     
     display_summary(config)
     
-    if not Confirm.ask("\n💾 Save this configuration?", default=True):
-        console.print("\n[yellow]Onboarding cancelled. No changes made.[/yellow]")
+    if not Confirm.ask(f"\n{icon('💾', 'Save')} Save this configuration?", default=True):
+        console.print(
+            emphasize(
+                f"\n[yellow]{icon('⚠️', 'Cancelled')} Onboarding cancelled. No changes made.[/yellow]",
+                "onboarding cancelled",
+            )
+        )
         return
     
     # Apply configuration
     apply_configuration(config)
     
-    console.print("\n[bold green]✅ Onboarding complete![/bold green]")
+    console.print(
+        emphasize(
+            f"\n[bold green]{icon('✅', 'Done')} Onboarding complete![/bold green]",
+            "onboarding complete",
+        )
+    )
     console.print("\n[bold]Next steps:[/bold]")
     console.print("  1. Create your first entry: [cyan]tracker new[/cyan]")
     console.print("  2. View your entry: [cyan]tracker show today[/cyan]")
@@ -106,6 +134,7 @@ def onboard(reset):
 
 def collect_system_config(reset: bool) -> Dict[str, Any]:
     """Collect system configuration"""
+    console = get_console()
     config = {}
     
     # Load existing if not reset
@@ -154,7 +183,12 @@ def collect_system_config(reset: bool) -> Dict[str, Any]:
         default=config.get("date_format", "YYYY-MM-DD")
     )
     
-    console.print("[dim]✓ System configuration complete[/dim]")
+    console.print(
+        emphasize(
+            f"[dim]{icon('✓', 'Done')} System configuration complete[/dim]",
+            "system configuration complete",
+        )
+    )
     return config
 
 

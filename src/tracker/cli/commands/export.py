@@ -4,13 +4,11 @@ from datetime import datetime
 from pathlib import Path
 
 import click
-from rich.console import Console
 from rich.panel import Panel
 
+from tracker.cli.ui.console import emphasize, get_console, icon
 from tracker.core.database import SessionLocal
 from tracker.services.export_service import ExportService
-
-console = Console()
 
 
 @click.command()
@@ -68,6 +66,7 @@ def export(export_format: str, output: str, start_date, end_date, compact: bool)
     service = ExportService(db)
     
     try:
+        console = get_console()
         # Parse dates
         start = start_date.date() if start_date else None
         end = end_date.date() if end_date else None
@@ -101,7 +100,9 @@ def export(export_format: str, output: str, start_date, end_date, compact: bool)
                 output_path = Path(f"tracker_export_all_{today}.{export_format}")
         
         # Show export info
-        console.print(f"\n[bold blue]Exporting Data[/bold blue]\n")
+        console.print(
+            f"\n[bold blue]{icon('📤', 'Export')} Exporting Data[/bold blue]\n"
+        )
         console.print(f"  Format: [cyan]{export_format.upper()}[/cyan]")
         console.print(f"  Entries: [cyan]{stats['entry_count']}[/cyan]")
         console.print(f"  Date range: [cyan]{stats['earliest_date']} to {stats['latest_date']}[/cyan]")
@@ -134,7 +135,12 @@ def export(export_format: str, output: str, start_date, end_date, compact: bool)
         
         # Show success
         actual_size = len(content.encode('utf-8')) / 1024
-        console.print(f"[green]✓ Export complete![/green]")
+        console.print(
+            emphasize(
+                f"[green]{icon('✅', 'Done')} Export complete![/green]",
+                "export complete",
+            )
+        )
         console.print(f"  File: [cyan]{output_path.absolute()}[/cyan]")
         console.print(f"  Size: [cyan]{actual_size:.1f} KB[/cyan]\n")
         
@@ -146,7 +152,9 @@ def export(export_format: str, output: str, start_date, end_date, compact: bool)
             console.print(Panel(preview, border_style="dim"))
         
     except Exception as e:
-        console.print(f"[red]Error: {e}[/red]")
+        get_console().print(
+            emphasize(f"[red]{icon('❌', 'Error')} Error: {e}[/red]", "export error")
+        )
         raise
     finally:
         db.close()

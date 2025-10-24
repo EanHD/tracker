@@ -10,6 +10,8 @@ from sqlalchemy.orm import Session
 from tracker.core.models import AIFeedback, DailyEntry
 from tracker.services.ai_client import create_ai_client
 from tracker.services.character_service import CharacterSheetService
+from tracker.services.profile_service import ProfileService
+from tracker.services.philosophy_context_service import PhilosophyContextService
 
 
 class FeedbackService:
@@ -128,8 +130,32 @@ class FeedbackService:
                     # (allows system to work before profile is built)
                     character_sheet = None
                 
-                # Generate feedback with character context
-                content, metadata = ai_client.generate_feedback(entry, character_sheet)
+                # Load user profile for rich context
+                profile_service = ProfileService(self.db)
+                try:
+                    profile_context = profile_service.get_ai_context(entry.user_id)
+                    # Update entry stats
+                    profile_service.update_entry_stats(entry.user_id, entry.date)
+                except Exception:
+                    profile_context = {}
+                
+                # Load philosophy context for wisdom-based guidance
+                philosophy_service = PhilosophyContextService(self.db)
+                try:
+                    philosophy_context = philosophy_service.generate_philosophy_prompt_section(
+                        entry.user_id,
+                        current_entry=entry
+                    )
+                except Exception:
+                    philosophy_context = ""
+                
+                # Generate feedback with character context, profile, and philosophy
+                content, metadata = ai_client.generate_feedback(
+                    entry, 
+                    character_sheet,
+                    profile_context=profile_context,
+                    philosophy_context=philosophy_context
+                )
                 
                 # Update feedback record
                 feedback.content = content

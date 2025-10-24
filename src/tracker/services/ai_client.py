@@ -14,27 +14,122 @@ class AIClient(ABC):
     """Abstract base class for AI clients"""
 
     @abstractmethod
-    def generate_feedback(self, entry: DailyEntry, character_sheet: Optional["CharacterSheet"] = None) -> tuple[str, dict]:
+    def generate_feedback(
+        self, 
+        entry: DailyEntry, 
+        character_sheet: Optional["CharacterSheet"] = None,
+        profile_context: Optional[dict] = None,
+        philosophy_context: Optional[str] = None
+    ) -> tuple[str, dict]:
         """
         Generate motivational feedback for an entry
         
         Args:
             entry: DailyEntry to generate feedback for
             character_sheet: Optional character profile for personalized feedback
+            profile_context: Optional user profile context for richer personalization
+            philosophy_context: Optional philosophy section with guiding principles
             
         Returns:
             Tuple of (feedback_content, metadata_dict)
             metadata includes: model, tokens_used, generation_time
         """
         pass
+    
+    @abstractmethod
+    def generate_chat_response(self, messages: list[dict]) -> tuple[str, dict]:
+        """
+        Generate a chat response based on message history
+        
+        Args:
+            messages: List of message dicts with 'role' and 'content'
+            
+        Returns:
+            Tuple of (response_content, metadata_dict)
+        """
+        pass
 
-    def _build_prompt(self, entry: DailyEntry, character_sheet: Optional["CharacterSheet"] = None) -> str:
+    def _build_prompt(
+        self, 
+        entry: DailyEntry, 
+        character_sheet: Optional["CharacterSheet"] = None,
+        profile_context: Optional[dict] = None,
+        philosophy_context: Optional[str] = None
+    ) -> str:
         """Build motivational feedback prompt from entry data"""
         
         prompt = ""
         
+        # Add philosophy context first (sets the wisdom foundation)
+        if philosophy_context:
+            prompt += philosophy_context + "\n\n---\n\n"
+        
+        # Add profile context if available (richer than character sheet)
+        if profile_context:
+            prompt += "# User Profile\n\n"
+            
+            # Basic preferences
+            nickname = profile_context.get("nickname", "friend")
+            if nickname:
+                prompt += f"Preferred name: {nickname}\n"
+            prompt += f"Preferred tone: {profile_context.get('preferred_tone', 'casual')}\n"
+            prompt += f"Baseline energy: {profile_context.get('baseline_energy', 5)}/10\n"
+            prompt += f"Baseline stress: {profile_context.get('baseline_stress', 5)}/10\n"
+            
+            # Entry stats
+            total_entries = profile_context.get('total_entries', 0)
+            streak = profile_context.get('entry_streak', 0)
+            if total_entries > 0:
+                prompt += f"\nUser has logged {total_entries} entries with a {streak}-day current streak"
+                longest = profile_context.get('longest_streak', 0)
+                if longest > streak:
+                    prompt += f" (best: {longest} days)"
+                prompt += ".\n"
+            
+            # Emotional context
+            if profile_context.get('stress_triggers'):
+                prompt += f"\nKnown stress triggers: {', '.join(profile_context['stress_triggers'])}\n"
+            if profile_context.get('calming_activities'):
+                prompt += f"Calming activities: {', '.join(profile_context['calming_activities'])}\n"
+            
+            # Work & financial context (if personal/deep mode)
+            work_info = profile_context.get('work_info')
+            if work_info:
+                prompt += f"\nWork: {work_info.get('job_title', 'N/A')}"
+                if work_info.get('employment_type'):
+                    prompt += f" ({work_info['employment_type']})"
+                prompt += "\n"
+            
+            financial_info = profile_context.get('financial_info')
+            if financial_info:
+                monthly_income = financial_info.get('monthly_income', 0)
+                if monthly_income:
+                    prompt += f"Monthly income: ~${monthly_income:.2f}\n"
+                
+                bills = financial_info.get('recurring_bills', [])
+                if bills:
+                    total_bills = sum(b.get('amount', 0) for b in bills)
+                    prompt += f"Recurring bills: ${total_bills:.2f}/month ({len(bills)} bills)\n"
+                
+                debts = financial_info.get('debts', [])
+                if debts:
+                    total_debt = sum(d.get('balance', 0) for d in debts)
+                    prompt += f"Total debt tracking: ${total_debt:.2f} across {len(debts)} accounts\n"
+            
+            # Goals
+            goals = profile_context.get('goals')
+            if goals:
+                short_term = goals.get('short_term', [])
+                long_term = goals.get('long_term', [])
+                if short_term or long_term:
+                    prompt += f"\nActive goals: {len(short_term)} short-term, {len(long_term)} long-term\n"
+                    if short_term:
+                        prompt += "  Recent goals: " + ", ".join([g['goal'] for g in short_term[:2]]) + "\n"
+            
+            prompt += "\n---\n\n"
+        
         # Add character context if available
-        if character_sheet:
+        elif character_sheet:
             prompt += "# User Character Profile\n\n"
             prompt += character_sheet.to_ai_context()
             prompt += "\n\n---\n\n"
@@ -131,13 +226,19 @@ class AnthropicClient(AIClient):
             self._client = Anthropic(api_key=self.api_key)
         return self._client
 
-    def generate_feedback(self, entry: DailyEntry, character_sheet: Optional["CharacterSheet"] = None) -> tuple[str, dict]:
+    def generate_feedback(
+        self, 
+        entry: DailyEntry, 
+        character_sheet: Optional["CharacterSheet"] = None,
+        profile_context: Optional[dict] = None,
+        philosophy_context: Optional[str] = None
+    ) -> tuple[str, dict]:
         """Generate feedback using Claude"""
         
         start_time = time.time()
         
         client = self._get_client()
-        prompt = self._build_prompt(entry, character_sheet)
+        prompt = self._build_prompt(entry, character_sheet, profile_context, philosophy_context)
         
         try:
             response = client.messages.create(
@@ -149,6 +250,46 @@ class AnthropicClient(AIClient):
                         "content": prompt
                     }
                 ]
+            )
+            
+            generation_time = time.time() - start_time
+            
+            content = response.content[0].text
+            
+            metadata = {
+                "model": self.model,
+                "tokens_used": response.usage.input_tokens + response.usage.output_tokens,
+                "generation_time": generation_time,
+            }
+            
+            return content, metadata
+            
+        except Exception as e:
+            raise RuntimeError(f"Anthropic API error: {e}")
+    
+    def generate_chat_response(self, messages: list[dict]) -> tuple[str, dict]:
+        """Generate chat response using Claude"""
+        
+        start_time = time.time()
+        
+        client = self._get_client()
+        
+        # Convert messages to Anthropic format (system separate from messages)
+        system_content = None
+        chat_messages = []
+        
+        for msg in messages:
+            if msg["role"] == "system":
+                system_content = msg["content"]
+            else:
+                chat_messages.append(msg)
+        
+        try:
+            response = client.messages.create(
+                model=self.model,
+                max_tokens=1024,
+                system=system_content,
+                messages=chat_messages
             )
             
             generation_time = time.time() - start_time
@@ -182,13 +323,19 @@ class OpenAIClient(AIClient):
             self._client = OpenAI(api_key=self.api_key)
         return self._client
 
-    def generate_feedback(self, entry: DailyEntry, character_sheet: Optional["CharacterSheet"] = None) -> tuple[str, dict]:
+    def generate_feedback(
+        self, 
+        entry: DailyEntry, 
+        character_sheet: Optional["CharacterSheet"] = None,
+        profile_context: Optional[dict] = None,
+        philosophy_context: Optional[str] = None
+    ) -> tuple[str, dict]:
         """Generate feedback using GPT"""
         
         start_time = time.time()
         
         client = self._get_client()
-        prompt = self._build_prompt(entry, character_sheet)
+        prompt = self._build_prompt(entry, character_sheet, profile_context, philosophy_context)
         
         # Determine which parameters to use based on model
         # Newer models (GPT-4, GPT-5, O1, O3) use max_completion_tokens
@@ -256,6 +403,39 @@ class OpenAIClient(AIClient):
             
         except Exception as e:
             raise RuntimeError(f"OpenAI API error: {e}")
+    
+    def generate_chat_response(self, messages: list[dict]) -> tuple[str, dict]:
+        """Generate chat response using GPT"""
+        
+        start_time = time.time()
+        
+        client = self._get_client()
+        
+        try:
+            response = client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                max_tokens=800,
+                temperature=0.7,
+            )
+            
+            generation_time = time.time() - start_time
+            
+            content = response.choices[0].message.content
+            
+            if not content:
+                content = "No response generated."
+            
+            metadata = {
+                "model": self.model,
+                "tokens_used": response.usage.total_tokens if response.usage else 0,
+                "generation_time": generation_time,
+            }
+            
+            return content, metadata
+            
+        except Exception as e:
+            raise RuntimeError(f"OpenAI API error: {e}")
 
 
 class OpenRouterClient(AIClient):
@@ -276,13 +456,19 @@ class OpenRouterClient(AIClient):
             )
         return self._client
 
-    def generate_feedback(self, entry: DailyEntry, character_sheet: Optional["CharacterSheet"] = None) -> tuple[str, dict]:
+    def generate_feedback(
+        self, 
+        entry: DailyEntry, 
+        character_sheet: Optional["CharacterSheet"] = None,
+        profile_context: Optional[dict] = None,
+        philosophy_context: Optional[str] = None
+    ) -> tuple[str, dict]:
         """Generate feedback using OpenRouter"""
         
         start_time = time.time()
         
         client = self._get_client()
-        prompt = self._build_prompt(entry, character_sheet)
+        prompt = self._build_prompt(entry, character_sheet, profile_context, philosophy_context)
         
         try:
             response = client.chat.completions.create(
@@ -298,6 +484,36 @@ class OpenRouterClient(AIClient):
                     }
                 ],
                 max_tokens=500,
+                temperature=0.7,
+            )
+            
+            generation_time = time.time() - start_time
+            
+            content = response.choices[0].message.content
+            
+            metadata = {
+                "model": self.model,
+                "tokens_used": response.usage.total_tokens if response.usage else 0,
+                "generation_time": generation_time,
+            }
+            
+            return content, metadata
+            
+        except Exception as e:
+            raise RuntimeError(f"OpenRouter API error: {e}")
+    
+    def generate_chat_response(self, messages: list[dict]) -> tuple[str, dict]:
+        """Generate chat response using OpenRouter"""
+        
+        start_time = time.time()
+        
+        client = self._get_client()
+        
+        try:
+            response = client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                max_tokens=800,
                 temperature=0.7,
             )
             
@@ -335,13 +551,19 @@ class LocalClient(AIClient):
             )
         return self._client
 
-    def generate_feedback(self, entry: DailyEntry, character_sheet: Optional["CharacterSheet"] = None) -> tuple[str, dict]:
+    def generate_feedback(
+        self, 
+        entry: DailyEntry, 
+        character_sheet: Optional["CharacterSheet"] = None,
+        profile_context: Optional[dict] = None,
+        philosophy_context: Optional[str] = None
+    ) -> tuple[str, dict]:
         """Generate feedback using local AI server"""
         
         start_time = time.time()
         
         client = self._get_client()
-        prompt = self._build_prompt(entry, character_sheet)
+        prompt = self._build_prompt(entry, character_sheet, profile_context, philosophy_context)
         
         try:
             response = client.chat.completions.create(
@@ -357,6 +579,36 @@ class LocalClient(AIClient):
                     }
                 ],
                 max_tokens=500,
+                temperature=0.7,
+            )
+            
+            generation_time = time.time() - start_time
+            
+            content = response.choices[0].message.content
+            
+            metadata = {
+                "model": self.model,
+                "tokens_used": response.usage.total_tokens if response.usage else 0,
+                "generation_time": generation_time,
+            }
+            
+            return content, metadata
+            
+        except Exception as e:
+            raise RuntimeError(f"Local AI server error: {e}")
+    
+    def generate_chat_response(self, messages: list[dict]) -> tuple[str, dict]:
+        """Generate chat response using local AI server"""
+        
+        start_time = time.time()
+        
+        client = self._get_client()
+        
+        try:
+            response = client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                max_tokens=800,
                 temperature=0.7,
             )
             

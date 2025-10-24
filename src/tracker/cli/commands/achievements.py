@@ -1,15 +1,13 @@
 """Achievements command - View gamification progress"""
 
 import click
-from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, BarColumn, TextColumn
 from rich.table import Table
 
+from tracker.cli.ui.console import emphasize, get_console, icon
 from tracker.core.database import SessionLocal
 from tracker.services.gamification_service import GamificationService
-
-console = Console()
 
 
 @click.command()
@@ -25,6 +23,7 @@ def achievements():
       # View all achievements
       tracker achievements
     """
+    console = get_console()
     db = SessionLocal()
     service = GamificationService(db)
     
@@ -37,7 +36,7 @@ def achievements():
             f"[bold cyan]{summary['streak']['current']}[/bold cyan] day streak\n"
             f"[dim]Longest: {summary['streak']['longest']} days[/dim]\n\n"
             f"{summary['streak']['message']}",
-            title="🔥 Current Streak",
+            title=f"{icon('🔥', 'Streak')} Current Streak",
             border_style="cyan"
         )
         console.print(streak_panel)
@@ -81,7 +80,9 @@ def achievements():
         
         # Display unlocked achievements
         if unlocked:
-            console.print("[bold green]🏆 Unlocked Achievements:[/bold green]\n")
+            console.print(
+                f"[bold green]{icon('🏆', 'Unlocked')} Unlocked Achievements:[/bold green]\n"
+            )
             
             table = Table(show_header=False, box=None, padding=(0, 2))
             table.add_column("Icon", style="bold")
@@ -100,7 +101,9 @@ def achievements():
         
         # Display locked achievements
         if locked:
-            console.print("[bold dim]🔒 Locked Achievements:[/bold dim]\n")
+            console.print(
+                f"[bold dim]{icon('🔒', 'Locked')} Locked Achievements:[/bold dim]\n"
+            )
             
             table = Table(show_header=False, box=None, padding=(0, 2))
             table.add_column("Icon", style="dim")
@@ -122,9 +125,11 @@ def achievements():
         
         # Display total stats
         console.print(f"[dim]Total entries: {summary['total_entries']}[/dim]")
-        
+    
     except Exception as e:
-        console.print(f"[red]Error: {e}[/red]")
+        console.print(
+            emphasize(f"[red]{icon('❌', 'Error')} Error: {e}[/red]", "achievements error")
+        )
     finally:
         db.close()
 

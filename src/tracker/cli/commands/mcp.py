@@ -5,9 +5,8 @@ Provides commands to run the MCP server for AI agent integration.
 """
 
 import click
-from rich.console import Console
 
-console = Console()
+from tracker.cli.ui.console import emphasize, get_console, icon
 
 
 @click.group(name="mcp")
@@ -50,18 +49,35 @@ def serve(http: bool, host: str, port: int):
       # For remote access (HTTP)
       tracker mcp serve --http --host 0.0.0.0 --port 8001
     """
+    console = get_console()
+
     if http:
         console.print(f"[yellow]Starting MCP server on HTTP transport at {host}:{port}...[/]")
-        console.print("[red]HTTP transport not yet implemented. Use stdio mode for now.[/]")
+        console.print(
+            emphasize(
+                "[red]HTTP transport not yet implemented. Use stdio mode for now.[/]",
+                "http transport unavailable",
+            )
+        )
         console.print("\n[dim]To use with Claude Desktop, run without --http flag:[/]")
         console.print("[dim]  tracker mcp serve[/]")
         return
     
     # Stdio mode
-    console.print("[green]Starting MCP server with stdio transport...[/]")
-    console.print("[dim]Waiting for MCP client connection (e.g., Claude Desktop)...[/]")
+    console.print(
+        emphasize(
+            f"[green]{icon('🚀', 'Start')} Starting MCP server with stdio transport...[/]",
+            "starting mcp server",
+        )
+    )
+    console.print(
+        emphasize(
+            "[dim]Waiting for MCP client connection (e.g., Claude Desktop)...[/]",
+            "waiting for client",
+        )
+    )
     console.print()
-    console.print("[yellow]To configure Claude Desktop:[/]")
+    console.print(f"[yellow]{icon('🛠️', 'Setup')} To configure Claude Desktop:[/]")
     console.print("[dim]1. Open Claude Desktop settings[/]")
     console.print("[dim]2. Add this configuration to mcpServers:[/]")
     console.print()
@@ -78,7 +94,16 @@ def serve(http: bool, host: str, port: int):
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        console.print("\n[yellow]MCP server stopped.[/]")
+        console.print(
+            emphasize(
+                f"\n[yellow]{icon('🛑', 'Stop')} MCP server stopped.[/]", "mcp server stopped"
+            )
+        )
     except Exception as e:
-        console.print(f"[red]Error running MCP server: {e}[/]")
+        console.print(
+            emphasize(
+                f"[red]{icon('❌', 'Error')} Error running MCP server: {e}[/]",
+                "mcp server error",
+            )
+        )
         raise

@@ -62,7 +62,7 @@ Thumbs.db
 # Project specific
 ~/.config/tracker/
 
-#AI
+#AI artifacts (keep essential docs tracked)
 CONFIGURATION_SUMMARY.md
 REMAINING_TASKS.md
 PRE_RELEASE_VERIFICATION.md
@@ -70,7 +70,6 @@ PROJECT_COMPLETE.md
 IMPLEMENTATION_STATUS.md
 IMPLEMENTATION_STATUS.md.bak
 IMPLEMENTATION_COMPLETE.md
-TUI_IMPLEMENTATION.md
 MULTI_MODE_SUMMARY.md
 COMMIT_MESSAGE.txt
 demo_tui.sh
@@ -79,3 +78,7 @@ verify_implementation.sh
 specs/
 .specify/
 tests/
+
+# Exports & personal backups
+tracker_export_*.json
+PROFILE_FEATURE_SUMMARY.txt

@@ -2,11 +2,9 @@
 
 import click
 import uvicorn
-from rich.console import Console
 
+from tracker.cli.ui.console import emphasize, get_console, icon
 from tracker.config import settings
-
-console = Console()
 
 
 @click.command()
@@ -16,10 +14,13 @@ console = Console()
 def server(host, port, reload):
     """Start the API server"""
     
+    console = get_console()
     host = host or settings.api_host
     port = port or settings.api_port
     
-    console.print(f"\n[bold green]🚀 Starting Tracker API Server[/bold green]\n")
+    console.print(
+        f"\n[bold green]{icon('🚀', 'Start')} Starting Tracker API Server[/bold green]\n"
+    )
     console.print(f"Host: [cyan]{host}[/cyan]")
     console.print(f"Port: [cyan]{port}[/cyan]")
     console.print(f"API Docs: [cyan]http://{host}:{port}/docs[/cyan]")
@@ -27,7 +28,12 @@ def server(host, port, reload):
     console.print()
     
     if reload:
-        console.print("[yellow]⚠️  Auto-reload enabled (development mode)[/yellow]\n")
+        console.print(
+            emphasize(
+                f"[yellow]{icon('⚠️', 'Warning')} Auto-reload enabled (development mode)[/yellow]\n",
+                "auto reload enabled",
+            )
+        )
     
     try:
         uvicorn.run(
@@ -38,6 +44,16 @@ def server(host, port, reload):
             log_level="info"
         )
     except KeyboardInterrupt:
-        console.print("\n[yellow]Server stopped by user[/yellow]\n")
+        console.print(
+            emphasize(
+                f"\n[yellow]{icon('🛑', 'Stop')} Server stopped by user[/yellow]\n",
+                "server stopped",
+            )
+        )
     except Exception as e:
-        console.print(f"\n[red]❌ Server error: {e}[/red]\n")
+        console.print(
+            emphasize(
+                f"\n[red]{icon('❌', 'Error')} Server error: {e}[/red]\n",
+                "server error",
+            )
+        )

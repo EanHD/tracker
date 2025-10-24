@@ -3,13 +3,11 @@
 from datetime import date, datetime, timedelta
 
 import click
-from rich.console import Console
 
+from tracker.cli.ui.console import emphasize, get_console, icon
 from tracker.core.database import SessionLocal
 from tracker.services.entry_service import EntryService
 from tracker.services.feedback_service import FeedbackService
-
-console = Console()
 
 
 @click.command()
@@ -32,10 +30,13 @@ def retry(date_arg):
     """
     
     # Parse date argument
+    console = get_console()
     try:
         entry_date = _parse_date_arg(date_arg)
     except ValueError as e:
-        console.print(f"[red]Error: {e}[/red]")
+        console.print(
+            emphasize(f"[red]{icon('❌', 'Error')} Error: {e}[/red]", "retry date error")
+        )
         return
     
     db = SessionLocal()
@@ -47,17 +48,29 @@ def retry(date_arg):
         # Get default user
         user = entry_service.get_default_user()
         if not user:
-            console.print("[red]Error: No user found. Please run 'tracker init' first.[/red]")
+            console.print(
+                emphasize(
+                    f"[red]{icon('❌', 'Error')} No user found. Please run 'tracker init' first.[/red]",
+                    "user missing",
+                )
+            )
             return
         
         # Fetch entry
         entry = entry_service.get_entry_by_date(user.id, entry_date)
         
         if not entry:
-            console.print(f"[red]Error: No entry found for {entry_date}[/red]")
+            console.print(
+                emphasize(
+                    f"[red]{icon('❌', 'Error')} No entry found for {entry_date}[/red]",
+                    "entry not found",
+                )
+            )
             return
         
-        console.print(f"\n[cyan]Regenerating AI feedback for {entry.date}...[/cyan]")
+        console.print(
+            f"\n[cyan]{icon('🔄', 'Regenerating')} Regenerating AI feedback for {entry.date}...[/cyan]"
+        )
         
         # Regenerate feedback
         feedback_service = FeedbackService(db)
@@ -66,18 +79,49 @@ def retry(date_arg):
             feedback = feedback_service.generate_feedback(entry.id, regenerate=True)
             
             if feedback.status == "completed":
-                console.print("[green]✓ Feedback generated successfully![/green]\n")
+                console.print(
+                    emphasize(
+                        f"[green]{icon('✅', 'Success')} Feedback generated successfully![/green]\n",
+                        "feedback regenerated",
+                    )
+                )
                 
                 # Display the feedback
                 from tracker.cli.ui.display import display_entry
                 display_entry(entry, show_feedback=True)
+                
+                # Offer to continue conversation
+                console.print()
+                if Confirm.ask(f"{icon('💬', '')} Continue conversation about this entry?", default=False):
+                    from tracker.services.chat import ChatService
+                    chat_service = ChatService(db, user_id=user.id)
+                    
+                    # Get or create chat for this entry
+                    chat_obj = chat_service.get_or_create_entry_chat(entry.id)
+                    
+                    console.print(f"\n[bold cyan]{icon('💬', '')} {chat_obj.title}[/bold cyan]")
+                    console.print(f"[dim]Chat ID: {chat_obj.id}[/dim]\n")
+                    
+                    # Start chat loop
+                    from tracker.cli.commands.chat import _chat_loop
+                    _chat_loop(console, chat_service, chat_obj.id)
             else:
-                console.print(f"[yellow]Warning: Feedback status is '{feedback.status}'[/yellow]")
+                console.print(
+                    emphasize(
+                        f"[yellow]{icon('⚠️', 'Warning')} Feedback status is '{feedback.status}'[/yellow]",
+                        "feedback status warning",
+                    )
+                )
                 if feedback.error_message:
-                    console.print(f"[yellow]Error: {feedback.error_message}[/yellow]")
+                    console.print(f"[yellow]{feedback.error_message}[/yellow]")
         
         except Exception as e:
-            console.print(f"[red]Error generating feedback: {e}[/red]")
+            console.print(
+                emphasize(
+                    f"[red]{icon('❌', 'Error')} Error generating feedback: {e}[/red]",
+                    "feedback generation error",
+                )
+            )
             console.print("\n[yellow]Tips:[/yellow]")
             console.print("  • Make sure your AI configuration is correct: [cyan]tracker config show[/cyan]")
             console.print("  • Check that your AI service is running (for local provider)")
@@ -85,7 +129,9 @@ def retry(date_arg):
             console.print("  • Try again in a moment if it's a temporary issue")
     
     except Exception as e:
-        console.print(f"[red]Error: {e}[/red]")
+        console.print(
+            emphasize(f"[red]{icon('❌', 'Error')} Error: {e}[/red]", "retry error")
+        )
     finally:
         db.close()
 

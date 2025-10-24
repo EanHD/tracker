@@ -1,9 +1,8 @@
 """Progress indicators and spinners"""
 
-from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-console = Console()
+from tracker.cli.ui.console import emphasize, get_console
 
 
 class FeedbackProgress:
@@ -16,9 +15,10 @@ class FeedbackProgress:
 
     def __enter__(self):
         """Start progress indicator"""
+        console = get_console()
         self.progress = Progress(
             SpinnerColumn(),
-            TextColumn("[cyan]{task.description}"),
+            TextColumn(emphasize("[cyan]{task.description}", "working")),
             console=console,
             transient=True,
         )

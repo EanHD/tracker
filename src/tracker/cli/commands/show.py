@@ -3,13 +3,11 @@
 from datetime import date, datetime, timedelta
 
 import click
-from rich.console import Console
 
+from tracker.cli.ui.console import emphasize, get_console, icon
 from tracker.cli.ui.display import display_entry, display_error, display_info
 from tracker.core.database import SessionLocal
 from tracker.services.entry_service import EntryService
-
-console = Console()
 
 
 @click.command()
@@ -39,6 +37,7 @@ def show(date_arg, no_feedback):
     # Get entry
     db = SessionLocal()
     try:
+        console = get_console()
         service = EntryService(db)
         
         # Get default user
@@ -52,7 +51,12 @@ def show(date_arg, no_feedback):
         
         if not entry:
             display_info(f"No entry found for {entry_date}")
-            console.print(f"\n[cyan]Create one:[/cyan] tracker new --date {entry_date}")
+            console.print(
+                emphasize(
+                    f"\n[cyan]{icon('➕', 'Create')} Create one:[/cyan] tracker new --date {entry_date}",
+                    "create entry tip",
+                )
+            )
             return
         
         # Display entry

@@ -5,22 +5,24 @@ from decimal import Decimal
 from typing import Optional
 
 import click
-from rich.console import Console
-from rich.panel import Panel
 from rich.table import Table
 
-from tracker.core.database import SessionLocal
-from tracker.core.schemas import EntryUpdate
-from tracker.services.entry_service import EntryService
-from tracker.services.feedback_service import FeedbackService
+from tracker.cli.ui.console import (
+    emphasize,
+    get_console,
+    icon,
+    qualitative_scale,
+)
 from tracker.cli.ui.prompts import (
     prompt_decimal,
     prompt_integer_range,
     prompt_text,
     prompt_yes_no,
 )
-
-console = Console()
+from tracker.core.database import SessionLocal
+from tracker.core.schemas import EntryUpdate
+from tracker.services.entry_service import EntryService
+from tracker.services.feedback_service import FeedbackService
 
 
 @click.command()
@@ -77,6 +79,7 @@ def edit(
     service = EntryService(db)
     
     try:
+        console = get_console()
         # Parse date
         if entry_date:
             target_date = entry_date.date()
@@ -86,12 +89,24 @@ def edit(
         # Get existing entry
         entry = service.get_entry_by_date(1, target_date)  # TODO: Get actual user
         if not entry:
-            console.print(f"[red]No entry found for {target_date}[/red]")
-            console.print(f"[yellow]Create one first:[/yellow] tracker new")
+            console.print(
+                emphasize(
+                    f"[red]{icon('❌', 'Error')} No entry found for {target_date}[/red]",
+                    "entry not found",
+                )
+            )
+            console.print(
+                emphasize(
+                    f"[yellow]{icon('➕', 'Create')} Create one first:[/yellow] tracker new",
+                    "create entry hint",
+                )
+            )
             return
         
         # Display current entry
-        console.print(f"\n[bold blue]Editing entry for {target_date}[/bold blue]\n")
+        console.print(
+            f"\n[bold blue]{icon('✏️', 'Edit')} Editing entry for {target_date}[/bold blue]\n"
+        )
         display_current_entry(entry)
         
         # Determine edit mode
@@ -112,52 +127,95 @@ def edit(
         
         # Check if any changes were made
         if not update_data:
-            console.print("[yellow]No changes made.[/yellow]")
+            console.print(
+                emphasize(
+                    f"[yellow]{icon('ℹ️', 'Info')} No changes made.[/yellow]",
+                    "no changes made",
+                )
+            )
             return
         
         # Show diff
-        console.print("\n[bold yellow]Proposed changes:[/bold yellow]")
+        console.print(f"\n[bold yellow]{icon('📝', 'Review')} Proposed changes:[/bold yellow]")
         diff = service.get_entry_diff(entry, update_data)
         display_diff(diff)
         
         # Confirm
         if not prompt_yes_no("\nSave these changes?", default=True):
-            console.print("[yellow]Edit cancelled.[/yellow]")
+            console.print(
+                emphasize(
+                    f"[yellow]{icon('⚠️', 'Cancelled')} Edit cancelled.[/yellow]",
+                    "edit cancelled",
+                )
+            )
             return
         
         # Apply updates
         updated_entry = service.update_entry(entry.id, update_data, user_id=1)  # TODO: Get actual user
         if not updated_entry:
-            console.print("[red]Failed to update entry.[/red]")
+            console.print(
+                emphasize(
+                    f"[red]{icon('❌', 'Error')} Failed to update entry.[/red]",
+                    "update failed",
+                )
+            )
             return
         
-        console.print(f"\n[green]✓ Entry updated for {target_date}[/green]")
+        console.print(
+            emphasize(
+                f"\n[green]{icon('✅', 'Success')} Entry updated for {target_date}[/green]",
+                "entry updated",
+            )
+        )
         
         # Regenerate feedback if requested or substantial changes
         substantial_change = getattr(updated_entry, '_substantial_change', False)
         if regenerate_feedback or substantial_change:
             if substantial_change and not regenerate_feedback:
-                console.print("\n[yellow]Substantial changes detected.[/yellow]")
+                console.print(
+                    emphasize(
+                        f"\n[yellow]{icon('⚠️', 'Heads up')} Substantial changes detected.[/yellow]",
+                        "substantial changes detected",
+                    )
+                )
                 if prompt_yes_no("Regenerate AI feedback?", default=True):
                     regenerate_feedback = True
             
             if regenerate_feedback:
-                console.print("\n[cyan]Regenerating AI feedback...[/cyan]")
+                console.print(
+                    emphasize(
+                        f"\n[cyan]{icon('🤖', 'AI')} Regenerating AI feedback...[/cyan]",
+                        "regenerating feedback",
+                    )
+                )
                 try:
                     feedback_service = FeedbackService(db)
                     feedback = feedback_service.generate_feedback(updated_entry.id, regenerate=True)
-                    console.print("[green]✓ Feedback regenerated[/green]")
+                    console.print(
+                        emphasize(
+                            f"[green]{icon('✅', 'Done')} Feedback regenerated[/green]",
+                            "feedback regenerated",
+                        )
+                    )
                 except Exception as e:
-                    console.print(f"[yellow]Warning: Feedback generation failed: {e}[/yellow]")
+                    console.print(
+                        emphasize(
+                            f"[yellow]{icon('⚠️', 'Warning')} Warning: Feedback generation failed: {e}[/yellow]",
+                            "feedback generation failed",
+                        )
+                    )
         
     except Exception as e:
-        console.print(f"[red]Error: {e}[/red]")
+        get_console().print(
+            emphasize(f"[red]{icon('❌', 'Error')} Error: {e}[/red]", "edit error")
+        )
     finally:
         db.close()
 
 
 def display_current_entry(entry):
     """Display current entry values"""
+    console = get_console()
     table = Table(show_header=True, header_style="bold cyan")
     table.add_column("Field")
     table.add_column("Current Value")
@@ -178,7 +236,19 @@ def display_current_entry(entry):
     table.add_row("Gas spent", f"${entry.gas_spent:.2f}")
     
     # Wellbeing fields
-    table.add_row("Stress level", f"{entry.stress_level}/10")
+    stress_descriptor = qualitative_scale(
+        entry.stress_level,
+        low=range(0, 4),
+        medium=range(4, 7),
+        high=range(7, 11),
+    )
+    table.add_row(
+        "Stress level",
+        emphasize(
+            f"{entry.stress_level}/10",
+            f"{stress_descriptor} stress" if stress_descriptor != "unknown" else None,
+        ),
+    )
     table.add_row("Priority", entry.priority or "[dim]none[/dim]")
     table.add_row("Journal", entry.notes or "[dim]none[/dim]")
     
@@ -222,12 +292,18 @@ def build_update_from_flags(
 
 def prompt_for_updates(entry) -> Optional[EntryUpdate]:
     """Prompt user for field updates interactively"""
-    console.print("\n[yellow]Press Enter to keep current value, or type new value:[/yellow]\n")
+    console = get_console()
+    console.print(
+        emphasize(
+            f"\n[yellow]{icon('⌨️', 'Input')} Press Enter to keep current value, or type new value:[/yellow]\n",
+            "press enter to keep values",
+        )
+    )
     
     updates = {}
     
     # Financial fields
-    console.print("[bold cyan]💰 Financial[/bold cyan]")
+    console.print(f"[bold cyan]{icon('💰', 'Finance')} Financial[/bold cyan]")
     cash = prompt_decimal("Cash on hand: $", default=str(entry.cash_on_hand) if entry.cash_on_hand is not None else None)
     if cash != entry.cash_on_hand:
         updates['cash_on_hand'] = cash
@@ -249,7 +325,7 @@ def prompt_for_updates(entry) -> Optional[EntryUpdate]:
         updates['debts_total'] = debts
     
     # Work fields
-    console.print("\n[bold cyan]💼 Work[/bold cyan]")
+    console.print(f"\n[bold cyan]{icon('💼', 'Work')} Work[/bold cyan]")
     hours = prompt_decimal("Hours worked: ", default=str(entry.hours_worked))
     if hours != entry.hours_worked:
         updates['hours_worked'] = hours
@@ -259,7 +335,7 @@ def prompt_for_updates(entry) -> Optional[EntryUpdate]:
         updates['side_income'] = side
     
     # Spending fields
-    console.print("\n[bold cyan]🛒 Spending[/bold cyan]")
+    console.print(f"\n[bold cyan]{icon('🛒', 'Spending')} Spending[/bold cyan]")
     food = prompt_decimal("Food spent: $", default=str(entry.food_spent))
     if food != entry.food_spent:
         updates['food_spent'] = food
@@ -269,7 +345,7 @@ def prompt_for_updates(entry) -> Optional[EntryUpdate]:
         updates['gas_spent'] = gas
     
     # Wellbeing fields
-    console.print("\n[bold cyan]🧘 Wellbeing[/bold cyan]")
+    console.print(f"\n[bold cyan]{icon('🧘', 'Wellbeing')} Wellbeing[/bold cyan]")
     stress = prompt_integer_range("Stress level (1-10): ", default=str(entry.stress_level), min_val=1, max_val=10)
     if stress != entry.stress_level:
         updates['stress_level'] = stress
@@ -278,7 +354,7 @@ def prompt_for_updates(entry) -> Optional[EntryUpdate]:
     if priority != (entry.priority or ""):
         updates['priority'] = priority if priority else None
     
-    console.print("\n[bold cyan]📓 Journal[/bold cyan]")
+    console.print(f"\n[bold cyan]{icon('📓', 'Journal')} Journal[/bold cyan]")
     notes = prompt_text("How was your day?: ", default=entry.notes or "", multiline=False)
     if notes != (entry.notes or ""):
         updates['notes'] = notes if notes else None
@@ -292,7 +368,7 @@ def prompt_for_updates(entry) -> Optional[EntryUpdate]:
 def display_diff(diff: dict):
     """Display changes in a formatted table"""
     if not diff:
-        console.print("[dim]No changes[/dim]")
+        get_console().print("[dim]No changes[/dim]")
         return
     
     table = Table(show_header=True, header_style="bold yellow")
@@ -314,4 +390,4 @@ def display_diff(diff: dict):
         
         table.add_row(field_name, old_str, new_str)
     
-    console.print(table)
+    get_console().print(table)

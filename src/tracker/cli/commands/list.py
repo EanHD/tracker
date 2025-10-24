@@ -3,15 +3,13 @@
 from datetime import date, timedelta
 
 import click
-from rich.console import Console
 from rich.table import Table
 
+from tracker.cli.ui.console import emphasize, get_console, icon, qualitative_scale
 from tracker.cli.ui.display import display_error, format_currency, get_stress_color
 from tracker.core.database import SessionLocal
 from tracker.services.entry_service import EntryService
 from tracker.services.history_service import HistoryService
-
-console = Console()
 
 
 @click.command()
@@ -24,6 +22,7 @@ def list(days, limit, start, end):
     
     db = SessionLocal()
     try:
+        console = get_console()
         # Get user
         entry_service = EntryService(db)
         user = entry_service.get_default_user()
@@ -52,12 +51,17 @@ def list(days, limit, start, end):
         )
         
         if not entries:
-            console.print("\n[yellow]No entries found for the specified range.[/yellow]\n")
+            console.print(
+                emphasize(
+                    f"\n[yellow]{icon('ℹ️', 'Info')} No entries found for the specified range.[/yellow]\n",
+                    "no entries found",
+                )
+            )
             console.print("Create your first entry: [cyan]tracker new[/cyan]\n")
             return
         
         # Create table
-        table = Table(title=f"📊 Your Entries ({len(entries)} total)")
+        table = Table(title=f"{icon('📊', 'Entries')} Your Entries ({len(entries)} total)")
         
         table.add_column("Date", style="cyan", no_wrap=True)
         table.add_column("Income", style="green", justify="right")
@@ -85,13 +89,19 @@ def list(days, limit, start, end):
             else:
                 ai_status = "-"
             
+            stress_descriptor = qualitative_scale(
+                entry.stress_level, low=range(0, 4), medium=range(4, 7), high=range(7, 11)
+            )
             table.add_row(
                 str(entry.date),
                 format_currency(entry.income_today),
                 format_currency(entry.bills_due_today),
                 format_currency(spending),
                 str(entry.hours_worked),
-                f"[{stress_color}]{entry.stress_level}/10[/{stress_color}]",
+                emphasize(
+                    f"[{stress_color}]{entry.stress_level}/10[/{stress_color}]",
+                    f"{stress_descriptor} stress" if stress_descriptor != "unknown" else None,
+                ),
                 ai_status,
                 entry.priority or "-"
             )
@@ -106,10 +116,24 @@ def list(days, limit, start, end):
         total_spending = sum(e.food_spent + e.gas_spent for e in entries)
         avg_stress = sum(e.stress_level for e in entries) / len(entries)
         
-        console.print(f"💰 Total income: [green]{format_currency(total_income)}[/green]")
-        console.print(f"📄 Total bills: [yellow]{format_currency(total_bills)}[/yellow]")
-        console.print(f"🛒 Total spending: [magenta]{format_currency(total_spending)}[/magenta]")
-        console.print(f"😰 Average stress: [{get_stress_color(int(avg_stress))}]{avg_stress:.1f}/10[/]")
+        console.print(
+            f"{icon('💰', 'Income')} Total income: [green]{format_currency(total_income)}[/green]"
+        )
+        console.print(
+            f"{icon('📄', 'Bills')} Total bills: [yellow]{format_currency(total_bills)}[/yellow]"
+        )
+        console.print(
+            f"{icon('🛒', 'Spending')} Total spending: [magenta]{format_currency(total_spending)}[/magenta]"
+        )
+        avg_descriptor = qualitative_scale(
+            int(round(avg_stress)), low=range(0, 4), medium=range(4, 7), high=range(7, 11)
+        )
+        console.print(
+            emphasize(
+                f"{icon('😰', 'Stress')} Average stress: [{get_stress_color(int(avg_stress))}]{avg_stress:.1f}/10[/]",
+                f"{avg_descriptor} stress" if avg_descriptor != "unknown" else None,
+            )
+        )
         console.print()
         
     except Exception as e:

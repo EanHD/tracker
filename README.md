@@ -13,8 +13,10 @@ A powerful daily tracking application with AI-powered insights. Track finances, 
 - 📝 **Rich CLI Interface** - Beautiful terminal UI with Rich library
 - 🎨 **Interactive TUI Mode** - Full-screen menu-driven interface with Textual
 - 🤖 **Multi-Provider AI** - OpenAI, Anthropic, OpenRouter, or Local models
+- 👤 **User Profiles** - **NEW!** Personalize AI feedback with your context (work, goals, preferences)
+- 🧠 **Philosophy Engine** - **NEW!** AI mentor system with 19 principles from Ramsey, Kiyosaki, and more
 - 📊 **Comprehensive Tracking** - Finance, work hours, stress, sleep, exercise, social time
-- 🔒 **Privacy-First** - Local SQLite database, no cloud storage
+- 🔒 **Privacy-First** - Local SQLite database, encrypted sensitive data, no cloud storage
 - 🔍 **Full-Text Search** - Find entries with keyword highlighting
 - 📈 **Statistics & Trends** - Analyze patterns with visual charts
 - 🎯 **Gamification** - 9 achievements, streak tracking, progress bars
@@ -120,6 +122,14 @@ tracker onboard
 # OPENAI_API_KEY=sk-...
 ```
 
+### Accessibility Options
+
+- `tracker --plain` – disables color markup and emoji, adds text descriptors for screen readers.
+- `tracker --no-color` / `tracker --no-emoji` – opt out of individual styling features.
+- Environment variables: set `TRACKER_PLAIN_MODE=1`, `TRACKER_NO_COLOR=1`, or `TRACKER_NO_EMOJI=1` to keep preferences across runs.
+
+Plain mode works across the interactive loop, CLI commands, and the Rich-powered preview panels, so assistive technology reads actionable text instead of ANSI control codes.
+
 ### Your First Entry
 
 ```bash
@@ -138,6 +148,23 @@ tracker show today
 # Check your achievements
 tracker achievements
 ```
+
+### Talk with Tracker
+
+Ask follow-up questions or get coaching based on your journal history.
+
+```bash
+# Start a fresh standalone conversation
+tracker chat new
+
+# List existing conversations (standalone + entry linked)
+tracker chat list
+
+# Resume a conversation by id
+tracker chat open 5
+```
+
+Inside the TUI, pick **Chats** from the main menu to browse conversations with inline context, continue discussion threads, or review transcript history without leaving the interface.
 
 ## 🎯 Usage Modes
 
@@ -248,6 +275,12 @@ tracker edit yesterday   # Edit existing entry
 tracker show 2025-10-21  # View specific entry
 tracker list --limit 30  # List recent entries
 
+# User Profile (NEW!)
+tracker profile setup    # Interactive profile wizard
+tracker profile view     # View your profile
+tracker profile update   # Update sections
+tracker profile checkin  # Monthly check-in
+
 # Analysis
 tracker stats --days 7   # Statistics and trends
 tracker search "stress"  # Search with highlighting
@@ -266,6 +299,89 @@ tracker config setup     # Interactive wizard
 tracker server          # Start REST API (port 5703)
 tracker mcp            # Start MCP server (stdio)
 ```
+
+## 👤 User Profile System
+
+**NEW!** Personalize AI feedback with rich context about you.
+
+### Privacy Levels
+- **Basic** - Just spending & stress (default)
+- **Personal** - Add work, bills, goals
+- **Deep** - Full context with AI pattern detection
+
+### Quick Start
+```bash
+# Interactive setup (2-5 minutes)
+tracker profile setup
+
+# View your profile
+tracker profile view
+
+# Monthly refresh
+tracker profile checkin
+```
+
+### How It Helps
+The AI uses your profile to provide:
+- ✅ **Personalized tone** - Casual, professional, encouraging, or stoic
+- ✅ **Context-aware insights** - "Rent due in 3 days, payday tomorrow—you're set!"
+- ✅ **Goal tracking** - "60% to your $5k emergency fund. On track for May!"
+- ✅ **Pattern recognition** - "Stress spikes mid-month. Gym session helped last time."
+- ✅ **Schedule awareness** - Reminders aligned with your pay schedule
+
+### Example Feedback Evolution
+
+**Without Profile:**
+> "You spent $45 on food today. Good job logging your entry!"
+
+**With Profile (Personal Mode, 12-day streak):**
+> "Hey Sarah! 12 days in a row—you're crushing it! I know tight finances have been stressing you out, but you kept it together today. Your $5k emergency fund is 60% there. At this rate, you'll hit it by May. One day at a time! 💪"
+
+📖 **Learn more**: See [USER_PROFILE_SYSTEM.md](USER_PROFILE_SYSTEM.md) for full details.
+
+## 🧠 Philosophy Engine - AI Mentor System
+
+**NEW!** Tracker's AI now speaks like a wise financial and life mentor.
+
+### What Is It?
+A wisdom system combining:
+- **Dave Ramsey** - Financial discipline (debt snowball, emergency fund, budgeting)
+- **Robert Kiyosaki** - Wealth mindset (assets, multiple incomes, financial education)
+- **Behavioral Economics** - How humans actually make decisions
+- **Emotional Intelligence** - Self-awareness and regulation
+- **Life Balance** - Holistic wellbeing and values alignment
+
+### How It Works
+The AI automatically:
+1. **Detects your life phase** (Debt Payoff → Stability → Growth → Legacy)
+2. **Analyzes your patterns** (stress, spending, streaks)
+3. **Selects relevant wisdom** (1-3 principles that fit your situation)
+4. **Adapts communication** (encouraging, honest, compassionate, etc.)
+
+### Example Transformation
+
+**Without Philosophy Engine:**
+> "You spent $45 on food today. Try to manage spending better."
+
+**With Philosophy Engine:**
+> "I see you today. Stress at 8/10, spending up—that's real and hard. You're not failing, you're human.
+>
+> Here's what I know: you can't make great money decisions when you're running on empty. Rest comes before budgeting.
+>
+> When you're ready, let's look at that smallest debt. $200 more and it's gone. That win will fuel the next one. Momentum beats math every time. One step at a time. 💪"
+
+### Core Principles (19 Total)
+
+| Category | Examples |
+|----------|----------|
+| **Financial Discipline** | Live Below Means, Emergency Fund First, Debt Snowball |
+| **Wealth Mindset** | Assets vs Liabilities, Pay Yourself First, Multiple Income Streams |
+| **Habit Building** | Progress Not Perfection, Automate Decisions, Celebrate Wins |
+| **Emotional Intelligence** | Notice Before React, Gratitude, Forgive Mistakes |
+| **Balance & Health** | Rest Well Decide Well, Align with Values |
+| **Behavioral Economics** | Momentum Over Math, Simplify Goals |
+
+📖 **Learn more**: See [PHILOSOPHY_ENGINE.md](PHILOSOPHY_ENGINE.md) for full documentation.
 
 ## 🏗️ Architecture
 

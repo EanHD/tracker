@@ -1,14 +1,17 @@
 """Search command - Full-text search across entries"""
 
 import click
-from rich.console import Console
 from rich.table import Table
 from rich.text import Text
 
+from tracker.cli.ui.console import (
+    emphasize,
+    get_console,
+    icon,
+    qualitative_scale,
+)
 from tracker.core.database import SessionLocal
 from tracker.services.history_service import HistoryService
-
-console = Console()
 
 
 @click.command()
@@ -39,12 +42,22 @@ def search(query: str, limit: int):
         results = service.search_entries(1, query, limit=limit)  # TODO: Get actual user
         
         if not results:
-            console.print(f"\n[yellow]No entries found matching '[cyan]{query}[/cyan]'[/yellow]\n")
+            get_console().print(
+                emphasize(
+                    f"\n[yellow]{icon('🔎', 'Search')} No entries found matching '[cyan]{query}[/cyan]'[/yellow]\n",
+                    "no search results",
+                )
+            )
             return
         
         # Display results
-        console.print(f"\n[bold blue]Search Results[/bold blue] for '[cyan]{query}[/cyan]'")
-        console.print(f"[dim]Found {len(results)} {'entry' if len(results) == 1 else 'entries'}[/dim]\n")
+        console = get_console()
+        console.print(
+            f"\n[bold blue]{icon('🔎', 'Search')} Search Results[/bold blue] for '[cyan]{query}[/cyan]'"
+        )
+        console.print(
+            f"[dim]Found {len(results)} {'entry' if len(results) == 1 else 'entries'}[/dim]\n"
+        )
         
         table = Table(show_header=True, header_style="bold cyan")
         table.add_column("Date", style="cyan", width=12)
@@ -60,7 +73,16 @@ def search(query: str, limit: int):
             
             # Color-code stress level
             stress_color = get_stress_color(entry.stress_level)
-            stress_text = f"[{stress_color}]{entry.stress_level}/10[/]"
+            stress_descriptor = qualitative_scale(
+                entry.stress_level,
+                low=range(0, 4),
+                medium=range(4, 7),
+                high=range(7, 11),
+            )
+            stress_text = emphasize(
+                f"[{stress_color}]{entry.stress_level}/10[/]",
+                f"{stress_descriptor} stress" if stress_descriptor != "unknown" else None,
+            )
             
             table.add_row(
                 str(entry.date),
@@ -74,7 +96,9 @@ def search(query: str, limit: int):
         console.print()
         
     except Exception as e:
-        console.print(f"[red]Error: {e}[/red]")
+        get_console().print(
+            emphasize(f"[red]{icon('❌', 'Error')} Error: {e}[/red]", "search error")
+        )
     finally:
         db.close()
 

@@ -5,12 +5,10 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 from cryptography.fernet import Fernet
-from rich.console import Console
 from rich.prompt import Confirm, Prompt
 
+from tracker.cli.ui.console import emphasize, get_console, icon
 from tracker.config import settings, get_env_file_path, get_config_dir
-
-console = Console()
 
 
 def save_provider_backup(env_path: Path, provider: str, config_dict: dict) -> None:
@@ -56,7 +54,12 @@ def save_provider_backup(env_path: Path, provider: str, config_dict: dict) -> No
     with open(backup_path, 'w') as f:
         f.writelines(lines)
     
-    console.print(f"[dim]💾 Saved {provider} config to {backup_path.name}[/dim]")
+    get_console().print(
+        emphasize(
+            f"[dim]{icon('💾', 'Saved')} Saved {provider} config to {backup_path.name}[/dim]",
+            "configuration backup saved",
+        )
+    )
 
 
 def load_provider_backup(env_path: Path, provider: str) -> dict:
@@ -190,14 +193,19 @@ def config():
 def setup():
     """Interactive configuration setup"""
     
-    console.print("\n[bold blue]🔧 Tracker Configuration Setup[/bold blue]\n")
+    console = get_console()
+    console.print(
+        f"\n[bold blue]{icon('🔧', 'Setup')} Tracker Configuration Setup[/bold blue]\n"
+    )
     
     # Get the correct .env path
     env_path = get_env_file_path()
     console.print(f"[dim]Configuration file: {env_path}[/dim]\n")
     
     # AI Provider
-    console.print("[bold cyan]AI Provider Configuration[/bold cyan]")
+    console.print(
+        f"[bold cyan]{icon('🤖', 'AI')} AI Provider Configuration[/bold cyan]"
+    )
     
     # Check for existing backups
     backup_dir = env_path.parent
@@ -222,7 +230,12 @@ def setup():
     saved_config = load_provider_backup(env_path, provider)
     
     if saved_config:
-        console.print(f"\n[yellow]📋 Found saved {provider} configuration[/yellow]")
+        console.print(
+            emphasize(
+                f"\n[yellow]{icon('📋', 'Saved config')} Found saved {provider} configuration[/yellow]",
+                "saved configuration detected",
+            )
+        )
         if saved_config.get('model'):
             console.print(f"[dim]Last used model: {saved_config['model']}[/dim]")
         
@@ -247,7 +260,12 @@ def setup():
                 model = None
             
             # Skip to encryption step
-            console.print("\n[green]✅ Using saved configuration[/green]")
+            console.print(
+                emphasize(
+                    f"\n[green]{icon('✅', 'Ready')} Using saved configuration[/green]",
+                    "using saved configuration",
+                )
+            )
         else:
             saved_config = None  # Fall through to new config
     
@@ -305,13 +323,20 @@ def setup():
     console.print("\n[bold cyan]Encryption Configuration[/bold cyan]")
     
     if settings.encryption_key:
-        console.print("✅ Encryption key already configured")
+        console.print(
+            emphasize(
+                f"{icon('✅', 'Enabled')} Encryption key already configured",
+                "encryption ready",
+            )
+        )
     else:
         console.print("Generating new encryption key...")
         encryption_key = Fernet.generate_key().decode()
     
     # Show configuration summary with confirmation
-    console.print("\n[bold green]✅ Configuration Summary[/bold green]\n")
+    console.print(
+        f"\n[bold green]{icon('✅', 'Summary')} Configuration Summary[/bold green]\n"
+    )
     console.print(f"AI Provider: [cyan]{provider}[/cyan]")
     console.print(f"Model: [cyan]{model}[/cyan]")
     
@@ -328,7 +353,12 @@ def setup():
     # Allow user to cancel before writing
     console.print()
     if not Confirm.ask("[bold]Does this look correct?[/bold]", default=True):
-        console.print("\n[yellow]❌ Configuration cancelled. No changes made.[/yellow]\n")
+        console.print(
+            emphasize(
+                f"\n[yellow]{icon('❌', 'Cancelled')} Configuration cancelled. No changes made.[/yellow]\n",
+                "configuration cancelled",
+            )
+        )
         return
     
     # Prepare configuration dictionary
@@ -352,32 +382,54 @@ def setup():
     try:
         write_env_file(config_dict, env_path)
         
-        console.print("\n[bold green]✅ Configuration saved![/bold green]")
+        console.print(
+            emphasize(
+                f"\n[bold green]{icon('✅', 'Saved')} Configuration saved![/bold green]",
+                "configuration saved",
+            )
+        )
         console.print(f"[dim]Active config: {env_path}[/dim]")
         console.print(f"[dim]Backup: .env.backup.{provider}[/dim]\n")
         
-        console.print("[cyan]✨ Ready to use! Try: tracker new[/cyan]\n")
+        console.print(f"[cyan]{icon('✨', 'Ready')} Ready to use! Try: tracker new[/cyan]\n")
         
         # Show quick switch tip
-        console.print("[dim]💡 Tip: Run 'tracker config setup' again to quickly switch providers[/dim]\n")
+        console.print(
+            f"[dim]{icon('💡', 'Tip')} Run 'tracker config setup' again to quickly switch providers[/dim]\n"
+        )
         
         # Reload settings
         console.print("[dim]Note: Restart any running processes to pick up new config[/dim]\n")
     
     except Exception as e:
-        console.print(f"\n[red]❌ Error writing configuration: {e}[/red]")
+        console.print(
+            emphasize(
+                f"\n[red]{icon('❌', 'Error')} Error writing configuration: {e}[/red]",
+                "configuration write error",
+            )
+        )
         if backup_path and backup_path.exists():
             console.print(f"[yellow]Backup preserved at: {backup_path}[/yellow]")
         raise
     
     except Exception as e:
-        console.print(f"\n[red]❌ Failed to write .env: {e}[/red]")
+        console.print(
+            emphasize(
+                f"\n[red]{icon('❌', 'Error')} Failed to write .env: {e}[/red]",
+                "env write error",
+            )
+        )
         
         # Offer to restore backup
         if backup_path and backup_path.exists():
             if Confirm.ask("Restore from backup?", default=True):
                 shutil.copy2(backup_path, env_path)
-                console.print(f"[green]✅ Restored from {backup_path}[/green]")
+                console.print(
+                    emphasize(
+                        f"[green]{icon('✅', 'Restored')} Restored from {backup_path}[/green]",
+                        "configuration restored from backup",
+                    )
+                )
             else:
                 console.print(f"[yellow]Backup preserved at: {backup_path}[/yellow]")
         
@@ -388,13 +440,16 @@ def setup():
 def show():
     """Show current configuration"""
     
-    console.print("\n[bold blue]Current Configuration[/bold blue]\n")
+    console = get_console()
+    console.print(f"\n[bold blue]{icon('🛠️', 'Config')} Current Configuration[/bold blue]\n")
     
     # Database
     console.print("[bold cyan]Database[/bold cyan]")
     console.print(f"  URL: {settings.database_url}")
     console.print(f"  Path: {settings.get_database_path()}")
-    console.print(f"  Encryption: {'✅ Enabled' if settings.encryption_key else '❌ Not configured'}")
+    encryption_icon = icon('✅', '') if settings.encryption_key else icon('❌', '')
+    encryption_label = "Enabled" if settings.encryption_key else "Not configured"
+    console.print(f"  Encryption: {(encryption_icon + ' ') if encryption_icon else ''}{encryption_label}")
     
     # AI
     console.print("\n[bold cyan]AI Provider[/bold cyan]")
@@ -414,10 +469,17 @@ def show():
     console.print(f"  Model: {model_display}")
     
     has_key = bool(settings.get_ai_api_key())
-    console.print(f"  API Key: {'✅ Configured' if has_key else '❌ Not configured'}")
+    api_key_icon = icon('✅', '') if has_key else icon('❌', '')
+    api_key_label = "Configured" if has_key else "Not configured"
+    console.print(f"  API Key: {(api_key_icon + ' ') if api_key_icon else ''}{api_key_label}")
     
     if not has_key:
-        console.print("\n[yellow]⚠️  No API key configured. Run: tracker config setup[/yellow]")
+        console.print(
+            emphasize(
+                f"\n[yellow]{icon('⚠️', 'Warning')} No API key configured. Run: tracker config setup[/yellow]",
+                "api key missing",
+            )
+        )
     
     # API Server
     console.print("\n[bold cyan]API Server[/bold cyan]")
@@ -432,7 +494,9 @@ def show():
 def generate_token(scopes):
     """Generate API token for external access"""
     
-    console.print("\n[bold blue]🔑 Generate API Token[/bold blue]\n")
+    console.print(
+        f"\n[bold blue]{icon('🔑', 'Token')} Generate API Token[/bold blue]\n"
+    )
     
     # This is a placeholder - actual JWT generation will be in Phase 5
     console.print("[yellow]API token generation will be available in Phase 5[/yellow]")

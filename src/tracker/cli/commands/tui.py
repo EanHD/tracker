@@ -1,9 +1,8 @@
 """TUI command - Launch interactive menu interface"""
 
 import click
-from rich.console import Console
 
-console = Console()
+from tracker.cli.ui.console import emphasize, get_console, icon
 
 
 @click.command()
@@ -24,6 +23,10 @@ def tui():
         from tracker.cli.tui.app import run_tui
         run_tui()
     except KeyboardInterrupt:
-        console.print("\n[yellow]Goodbye![/yellow]")
+        get_console().print(
+            emphasize(f"\n[yellow]{icon('👋', 'Goodbye')} Goodbye![/yellow]", "tui exit")
+        )
     except Exception as e:
-        console.print(f"[red]Error: {e}[/red]")
+        get_console().print(
+            emphasize(f"[red]{icon('❌', 'Error')} Error: {e}[/red]", "tui error")
+        )

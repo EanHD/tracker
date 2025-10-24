@@ -6,9 +6,8 @@ from typing import Optional
 
 from prompt_toolkit import prompt
 from prompt_toolkit.validation import ValidationError, Validator
-from rich.console import Console
 
-console = Console()
+from tracker.cli.ui.console import get_console
 
 
 class DecimalValidator(Validator):
@@ -98,18 +97,18 @@ def prompt_decimal(
             
             result = result.strip()
             if not result:
-                return None
+                return Decimal("0") if default == "" else None
             
             return Decimal(result)
         
         except (ValidationError, InvalidOperation) as e:
-            console.print(f"[red]Invalid input: {e}[/red]")
-            console.print("[yellow]Please try again (or press Ctrl+C to cancel)[/yellow]")
+            get_console().print(f"[red]Invalid input: {e}[/red]")
+            get_console().print("[yellow]Please try again (or press Ctrl+C to cancel)[/yellow]")
         except KeyboardInterrupt:
             raise  # Allow cancellation
         except Exception as e:
-            console.print(f"[red]Error: {e}[/red]")
-            console.print("[yellow]Please try again (or press Ctrl+C to cancel)[/yellow]")
+            get_console().print(f"[red]Error: {e}[/red]")
+            get_console().print("[yellow]Please try again (or press Ctrl+C to cancel)[/yellow]")
 
 
 def prompt_integer_range(
@@ -131,13 +130,13 @@ def prompt_integer_range(
             return int(result.strip())
         
         except (ValidationError, ValueError) as e:
-            console.print(f"[red]Invalid input: {e}[/red]")
-            console.print(f"[yellow]Please enter a number between {min_val} and {max_val}[/yellow]")
+            get_console().print(f"[red]Invalid input: {e}[/red]")
+            get_console().print(f"[yellow]Please enter a number between {min_val} and {max_val}[/yellow]")
         except KeyboardInterrupt:
             raise  # Allow cancellation
         except Exception as e:
-            console.print(f"[red]Error: {e}[/red]")
-            console.print("[yellow]Please try again (or press Ctrl+C to cancel)[/yellow]")
+            get_console().print(f"[red]Error: {e}[/red]")
+            get_console().print("[yellow]Please try again (or press Ctrl+C to cancel)[/yellow]")
 
 
 def prompt_text(
@@ -149,10 +148,12 @@ def prompt_text(
     
     while True:
         try:
+            # Enable word wrapping for multiline input
             result = prompt(
                 message,
                 default=default or "",
                 multiline=multiline,
+                wrap_lines=multiline,
             )
             
             result = result.strip()
@@ -161,8 +162,8 @@ def prompt_text(
         except KeyboardInterrupt:
             raise  # Allow cancellation
         except Exception as e:
-            console.print(f"[red]Error: {e}[/red]")
-            console.print("[yellow]Please try again (or press Ctrl+C to cancel)[/yellow]")
+            get_console().print(f"[red]Error: {e}[/red]")
+            get_console().print("[yellow]Please try again (or press Ctrl+C to cancel)[/yellow]")
 
 
 def prompt_date(
@@ -184,13 +185,13 @@ def prompt_date(
             return datetime.strptime(result.strip(), "%Y-%m-%d").date()
         
         except (ValidationError, ValueError) as e:
-            console.print(f"[red]Invalid date: {e}[/red]")
-            console.print("[yellow]Please use YYYY-MM-DD format (e.g., 2025-10-21)[/yellow]")
+            get_console().print(f"[red]Invalid date: {e}[/red]")
+            get_console().print("[yellow]Please use YYYY-MM-DD format (e.g., 2025-10-21)[/yellow]")
         except KeyboardInterrupt:
             raise  # Allow cancellation
         except Exception as e:
-            console.print(f"[red]Error: {e}[/red]")
-            console.print("[yellow]Please try again (or press Ctrl+C to cancel)[/yellow]")
+            get_console().print(f"[red]Error: {e}[/red]")
+            get_console().print("[yellow]Please try again (or press Ctrl+C to cancel)[/yellow]")
 
 
 def prompt_yes_no(message: str, default: bool = True) -> bool:
@@ -218,11 +219,11 @@ def prompt_yes_no(message: str, default: bool = True) -> bool:
             elif result in ('n', 'no', 'false', '0'):
                 return False
             else:
-                console.print("[yellow]Please answer 'y' or 'n'[/yellow]")
+                get_console().print("[yellow]Please answer 'y' or 'n'[/yellow]")
                 continue
         
         except KeyboardInterrupt:
             raise  # Allow cancellation
         except Exception as e:
-            console.print(f"[red]Error: {e}[/red]")
-            console.print("[yellow]Please try again (or press Ctrl+C to cancel)[/yellow]")
+            get_console().print(f"[red]Error: {e}[/red]")
+            get_console().print("[yellow]Please try again (or press Ctrl+C to cancel)[/yellow]")

@@ -3,16 +3,19 @@
 from datetime import date, timedelta
 
 import click
-from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from tracker.cli.ui.console import (
+    emphasize,
+    get_console,
+    icon,
+    qualitative_scale,
+)
 from tracker.cli.ui.display import display_error, format_currency, get_stress_color
 from tracker.core.database import SessionLocal
 from tracker.services.entry_service import EntryService
 from tracker.services.history_service import HistoryService
-
-console = Console()
 
 
 @click.command()
@@ -22,6 +25,7 @@ def stats(days):
     
     db = SessionLocal()
     try:
+        console = get_console()
         # Get user
         entry_service = EntryService(db)
         user = entry_service.get_default_user()
@@ -37,21 +41,32 @@ def stats(days):
         streak_info = history_service.get_streak_info(user.id)
         
         if statistics["count"] == 0:
-            console.print("\n[yellow]No entries found. Create one with:[/yellow] tracker new\n")
+            console.print(
+                emphasize(
+                    f"\n[yellow]{icon('ℹ️', 'Info')} No entries found. Create one with:[/yellow] tracker new\n",
+                    "no entries found",
+                )
+            )
             return
         
-        console.print(f"\n[bold cyan]📊 Statistics for last {days} days[/bold cyan]\n")
+        console.print(
+            f"\n[bold cyan]{icon('📊', 'Stats')} Statistics for last {days} days[/bold cyan]\n"
+        )
         
         # Streak info
-        console.print("[bold]🔥 Logging Streak[/bold]")
-        console.print(f"  Current streak: [green]{streak_info['current_streak']} days[/green]")
-        console.print(f"  Longest streak: [cyan]{streak_info['longest_streak']} days[/cyan]")
+        console.print(f"[bold]{icon('🔥', 'Streak')} Logging Streak[/bold]")
+        console.print(
+            f"  Current streak: [green]{streak_info['current_streak']} days[/green]"
+        )
+        console.print(
+            f"  Longest streak: [cyan]{streak_info['longest_streak']} days[/cyan]"
+        )
         console.print(f"  Total entries: {streak_info['total_entries']}")
         console.print()
         
         # Financial summary
         lines = []
-        lines.append("[bold cyan]💰 Financial Summary[/bold cyan]")
+        lines.append(f"[bold cyan]{icon('💰', 'Finance')} Financial Summary[/bold cyan]")
         lines.append(f"  Total income: [green]{format_currency(statistics['income']['total'])}[/green]")
         lines.append(f"  Average income: {format_currency(statistics['income']['average'])}")
         lines.append(f"  Total bills: [yellow]{format_currency(statistics['bills']['total'])}[/yellow]")
@@ -64,7 +79,7 @@ def stats(days):
         console.print()
         
         # Work summary
-        console.print("[bold cyan]💼 Work Summary[/bold cyan]")
+        console.print(f"[bold cyan]{icon('💼', 'Work')} Work Summary[/bold cyan]")
         console.print(f"  Total hours: {statistics['work']['total_hours']}")
         console.print(f"  Average hours/day: {statistics['work']['average_hours']:.1f}")
         console.print(f"  Side income: {format_currency(statistics['work']['side_income_total'])}")
@@ -74,10 +89,25 @@ def stats(days):
         avg_stress = statistics['wellbeing']['average_stress']
         stress_color = get_stress_color(int(avg_stress))
         
-        console.print("[bold cyan]🧘 Wellbeing Summary[/bold cyan]")
-        console.print(f"  Average stress: [{stress_color}]{avg_stress:.1f}/10[/{stress_color}]")
-        console.print(f"  Lowest stress: [green]{statistics['wellbeing']['min_stress']}/10[/green]")
-        console.print(f"  Highest stress: [red]{statistics['wellbeing']['max_stress']}/10[/red]")
+        console.print(f"[bold cyan]{icon('🧘', 'Wellbeing')} Wellbeing Summary[/bold cyan]")
+        stress_descriptor = qualitative_scale(
+            int(round(avg_stress)),
+            low=range(0, 4),
+            medium=range(4, 7),
+            high=range(7, 11),
+        )
+        console.print(
+            emphasize(
+                f"  Average stress: [{stress_color}]{avg_stress:.1f}/10[/{stress_color}]",
+                f"{stress_descriptor} stress" if stress_descriptor != "unknown" else None,
+            )
+        )
+        console.print(
+            f"  Lowest stress: [green]{statistics['wellbeing']['min_stress']}/10[/green]"
+        )
+        console.print(
+            f"  Highest stress: [red]{statistics['wellbeing']['max_stress']}/10[/red]"
+        )
         console.print()
         
         # Create breakdown table
@@ -90,7 +120,13 @@ def stats(days):
         table.add_row("Spending", format_currency(statistics['spending']['average']))
         table.add_row("Net", format_currency(statistics['net_income']['average']))
         table.add_row("Hours worked", f"{statistics['work']['average_hours']:.1f}")
-        table.add_row("Stress level", f"{avg_stress:.1f}/10")
+        table.add_row(
+            "Stress level",
+            emphasize(
+                f"{avg_stress:.1f}/10",
+                f"{stress_descriptor} stress" if stress_descriptor != "unknown" else None,
+            ),
+        )
         
         console.print(table)
         console.print()

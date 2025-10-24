@@ -1,26 +1,26 @@
 """CLI UI components for display"""
 
-from datetime import date
 from decimal import Decimal
 from typing import Optional
 import textwrap
 
-from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
-from rich.text import Text
 
-console = Console()
+from tracker.cli.ui.console import (
+    emphasize,
+    get_console,
+    icon,
+    qualitative_scale,
+)
 
 
 def get_stress_color(stress_level: int) -> str:
     """Get color for stress level"""
     if stress_level <= 3:
         return "green"
-    elif stress_level <= 6:
+    if stress_level <= 6:
         return "yellow"
-    else:
-        return "red"
+    return "red"
 
 
 def format_currency(amount: Optional[Decimal]) -> str:
@@ -32,12 +32,13 @@ def format_currency(amount: Optional[Decimal]) -> str:
 
 def display_entry(entry, show_feedback: bool = False):
     """Display a daily entry with Rich formatting"""
-    
+    console = get_console()
+
     # Build the display text
     lines = []
-    
+
     # Financial section
-    lines.append("[bold cyan]💰 Financial Snapshot[/bold cyan]")
+    lines.append(f"[bold cyan]{icon('💰', 'Finance')} Financial Snapshot[/bold cyan]")
     lines.append(f"  Cash on hand: {format_currency(entry.cash_on_hand)}")
     lines.append(f"  Bank balance: {format_currency(entry.bank_balance)}")
     lines.append(f"  Income today: {format_currency(entry.income_today)}")
@@ -45,30 +46,48 @@ def display_entry(entry, show_feedback: bool = False):
     lines.append(f"  Total debt: {format_currency(entry.debts_total)}")
     lines.append(f"  Side income: {format_currency(entry.side_income)}")
     lines.append("")
-    
+
     # Spending section
-    lines.append("[bold cyan]🛒 Spending[/bold cyan]")
+    lines.append(f"[bold cyan]{icon('🛒', 'Spending')} Spending[/bold cyan]")
     lines.append(f"  Food: {format_currency(entry.food_spent)}")
     lines.append(f"  Gas: {format_currency(entry.gas_spent)}")
     lines.append(f"  Total: {format_currency(entry.food_spent + entry.gas_spent)}")
     lines.append("")
-    
+
     # Work section
-    lines.append("[bold cyan]💼 Work[/bold cyan]")
+    lines.append(f"[bold cyan]{icon('💼', 'Work')} Work[/bold cyan]")
     lines.append(f"  Hours worked: {entry.hours_worked}")
     lines.append("")
-    
+
     # Wellbeing section
     stress_color = get_stress_color(entry.stress_level)
-    lines.append("[bold cyan]🧘 Wellbeing[/bold cyan]")
-    lines.append(f"  Stress level: [{stress_color}]{entry.stress_level}/10[/{stress_color}]")
+    stress_descriptor = qualitative_scale(
+        entry.stress_level,
+        low=range(0, 4),
+        medium=range(4, 7),
+        high=range(7, 11),
+    )
+    stress_text = emphasize(
+        f"[{stress_color}]{entry.stress_level}/10[/]",
+        f"{stress_descriptor} stress" if stress_descriptor != "unknown" else None,
+    )
+
+    lines.append(f"[bold cyan]{icon('🧘', 'Wellbeing')} Wellbeing[/bold cyan]")
+    lines.append(f"  Stress level: {stress_text}")
     lines.append(f"  Priority: {entry.priority or 'N/A'}")
-    
+
     if entry.notes:
         lines.append("")
-        lines.append("[bold cyan]� Journal[/bold cyan]")
-        lines.append(f"  {entry.notes}")
-    
+        lines.append(f"[bold cyan]{icon('📝', 'Journal')} Journal[/bold cyan]")
+        wrapped_lines = textwrap.wrap(
+            entry.notes,
+            width=70,
+            break_long_words=False,
+            break_on_hyphens=False,
+        )
+        for line in wrapped_lines:
+            lines.append(f"  {line}")
+
     # Create panel
     panel = Panel(
         "\n".join(lines),
@@ -76,35 +95,51 @@ def display_entry(entry, show_feedback: bool = False):
         border_style="blue",
         padding=(1, 2),
     )
-    
+
     console.print(panel)
-    
+
     # Display feedback if requested and available
-    if show_feedback and hasattr(entry, 'feedback') and entry.feedback:
+    if show_feedback and hasattr(entry, "feedback") and entry.feedback:
         display_feedback(entry.feedback)
 
 
 def display_feedback(feedback):
-    """Display AI feedback"""
+    """Display AI feedback with Markdown rendering"""
+    from rich.markdown import Markdown
     
+    console = get_console()
+
     if feedback.status == "pending":
-        console.print("\n[yellow]⏳ AI feedback is being generated...[/yellow]")
+        console.print(
+            emphasize(
+                f"\n[yellow]{icon('⏳', 'Pending')} AI feedback is being generated...[/yellow]",
+                "feedback pending",
+            )
+        )
         return
-    
+
     if feedback.status == "failed":
-        console.print(f"\n[red]❌ AI feedback generation failed: {feedback.error_message}[/red]")
+        console.print(
+            emphasize(
+                f"\n[red]{icon('❌', 'Error')} AI feedback generation failed: {feedback.error_message}[/red]",
+                "feedback error",
+            )
+        )
         return
+
+    # Render feedback as Markdown for proper formatting
+    # This preserves **bold**, line breaks, lists, etc.
+    md = Markdown(feedback.content)
     
-    # Display completed feedback
     panel = Panel(
-        feedback.content,
-        title="[bold green]💬 Feedback[/bold green]",
+        md,
+        title=f"[bold green]{icon('💬', 'Feedback')} Tracker[/bold green]",
         border_style="green",
         padding=(1, 2),
     )
     console.print("\n")
     console.print(panel)
-    
+
     # Show metadata
     if feedback.provider:
         metadata = f"[dim]Generated by {feedback.provider}"
@@ -118,7 +153,8 @@ def display_feedback(feedback):
 
 def display_entry_preview(entry_data: dict):
     """Display entry preview before saving"""
-    
+    console = get_console()
+
     lines = []
     lines.append(f"Date: {entry_data['date']}")
     lines.append(f"Cash on hand: {format_currency(entry_data.get('cash_on_hand'))}")
@@ -130,40 +166,66 @@ def display_entry_preview(entry_data: dict):
     lines.append(f"Side income: {format_currency(entry_data.get('side_income'))}")
     lines.append(f"Food: {format_currency(entry_data.get('food_spent'))}")
     lines.append(f"Gas: {format_currency(entry_data.get('gas_spent'))}")
-    
-    stress_color = get_stress_color(entry_data.get('stress_level', 5))
-    lines.append(f"Stress: [{stress_color}]{entry_data.get('stress_level')}/10[/{stress_color}]")
+
+    stress_value = entry_data.get("stress_level")
+    stress_color = get_stress_color(stress_value or 0)
+    stress_descriptor = qualitative_scale(
+        stress_value if stress_value is not None else 0,
+        low=range(0, 4),
+        medium=range(4, 7),
+        high=range(7, 11),
+    )
+    stress_text = emphasize(
+        f"[{stress_color}]{stress_value}/10[/{stress_color}]"
+        if stress_value is not None
+        else "N/A",
+        f"{stress_descriptor} stress" if stress_value is not None else None,
+    )
+    lines.append(f"Stress: {stress_text}")
     lines.append(f"Priority: {entry_data.get('priority') or 'N/A'}")
-    
-    if entry_data.get('notes'):
+
+    if entry_data.get("notes"):
         lines.append("")
-        # Word wrap the journal entry to avoid splitting words
-        wrapped_lines = textwrap.wrap(entry_data['notes'], width=70, break_long_words=False, break_on_hyphens=False)
+        wrapped_lines = textwrap.wrap(
+            entry_data["notes"],
+            width=70,
+            break_long_words=False,
+            break_on_hyphens=False,
+        )
         lines.append("Journal:")
         for line in wrapped_lines:
             lines.append(f"  {line}")
-    
+
     panel = Panel(
         "\n".join(lines),
         title="[bold]Entry Preview[/bold]",
         border_style="cyan",
         padding=(1, 2),
     )
-    
+
     console.print("\n")
     console.print(panel)
 
 
 def display_success(message: str):
     """Display success message"""
-    console.print(f"\n[bold green]✅ {message}[/bold green]\n")
+    console = get_console()
+    console.print(
+        emphasize(f"\n[bold green]{icon('✅', 'Success')} {message}[/bold green]\n", "success")
+    )
 
 
 def display_error(message: str):
     """Display error message"""
-    console.print(f"\n[bold red]❌ {message}[/bold red]\n")
+    console = get_console()
+    console.print(
+        emphasize(f"\n[bold red]{icon('❌', 'Error')} {message}[/bold red]\n", "error")
+    )
 
 
 def display_info(message: str):
     """Display info message"""
-    console.print(f"\n[cyan]ℹ️  {message}[/cyan]\n")
+    console = get_console()
+    console.print(
+        emphasize(f"\n[cyan]{icon('ℹ️', 'Info')}  {message}[/cyan]\n", "info")
+    )

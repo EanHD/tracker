@@ -1,8 +1,9 @@
-"""Retry AI feedback generation for an entry"""
+"""Retry feedback generation for an entry"""
 
 from datetime import date, datetime, timedelta
 
 import click
+from rich.prompt import Confirm
 
 from tracker.cli.ui.console import emphasize, get_console, icon
 from tracker.core.database import SessionLocal
@@ -14,7 +15,7 @@ from tracker.services.feedback_service import FeedbackService
 @click.argument("date_arg", required=False)
 def retry(date_arg):
     """
-    Retry AI feedback generation for an entry
+    Retry feedback generation for an entry
     
     DATE can be:
     - YYYY-MM-DD format (e.g., 2025-10-21)
@@ -69,7 +70,7 @@ def retry(date_arg):
             return
         
         console.print(
-            f"\n[cyan]{icon('🔄', 'Regenerating')} Regenerating AI feedback for {entry.date}...[/cyan]"
+            f"\n[cyan]{icon('🔄', 'Regenerating')} Regenerating feedback for {entry.date}...[/cyan]"
         )
         
         # Regenerate feedback
@@ -99,7 +100,9 @@ def retry(date_arg):
                     # Get or create chat for this entry
                     chat_obj = chat_service.get_or_create_entry_chat(entry.id)
                     
-                    console.print(f"\n[bold cyan]{icon('💬', '')} {chat_obj.title}[/bold cyan]")
+                    # Clear screen before starting chat for clean layout
+                    console.clear()
+                    console.print(f"[bold cyan]{icon('💬', '')} {chat_obj.title}[/bold cyan]")
                     console.print(f"[dim]Chat ID: {chat_obj.id}[/dim]\n")
                     
                     # Start chat loop
@@ -123,8 +126,8 @@ def retry(date_arg):
                 )
             )
             console.print("\n[yellow]Tips:[/yellow]")
-            console.print("  • Make sure your AI configuration is correct: [cyan]tracker config show[/cyan]")
-            console.print("  • Check that your AI service is running (for local provider)")
+            console.print("  • Make sure your configuration is correct: [cyan]tracker config show[/cyan]")
+            console.print("  • Check that your service is running (for local provider)")
             console.print("  • Verify your API key is valid (for cloud providers)")
             console.print("  • Try again in a moment if it's a temporary issue")
     

@@ -2,8 +2,28 @@
 
 from rich.panel import Panel
 from rich.prompt import Prompt, Confirm
+import textwrap
 
 from tracker.cli.ui.console import emphasize, get_console, icon, qualitative_scale
+
+
+def _format_notes(notes):
+    """Format notes with proper text wrapping for display"""
+    if not notes:
+        return ""
+    
+    console = get_console()
+    console_width = console.width if hasattr(console, 'width') else 80
+    wrap_width = max(console_width - 15, 40)  # Account for panel padding and ensure minimum width
+    
+    wrapped_lines = textwrap.wrap(
+        notes,
+        width=wrap_width,
+        break_long_words=False,
+        break_on_hyphens=False,
+    )
+    
+    return "\n".join(f"  {line}" for line in wrapped_lines)
 
 
 def show_main_menu():
@@ -210,7 +230,7 @@ def show_entry_detail(entry):
   Priority:        {entry.priority or '[dim]none[/dim]'}
 
 [bold]{icon('📝', 'Notes')} Notes[/bold]
-{entry.notes or '[dim]No notes for this day[/dim]'}
+{_format_notes(entry.notes) or '[dim]No notes for this day[/dim]'}
 """
     else:
         # Narrow view - compact format
@@ -227,7 +247,7 @@ def show_entry_detail(entry):
   Priority: {entry.priority or '[dim]none[/dim]'}
 
 [bold]{icon('📝', '')} Notes[/bold]
-{entry.notes or '[dim]none[/dim]'}
+{_format_notes(entry.notes) or '[dim]none[/dim]'}
 """
     
     console.print(Panel(detail, border_style="cyan", padding=(1, 1) if is_narrow else (1, 2)))
@@ -248,7 +268,7 @@ def show_entry_detail(entry):
             # Create panel with Markdown content
             feedback_panel = Panel(
                 md,
-                title=f"[bold cyan]{icon('💬', 'Feedback')} AI Feedback[/bold cyan]",
+                title=f"[bold cyan]{icon('💬', 'Feedback')}Feedback[/bold cyan]",
                 border_style="cyan",
                 padding=(1, 2)
             )
@@ -257,7 +277,7 @@ def show_entry_detail(entry):
             # Show metadata below
             console.print(f"[dim]Generated: {feedback.created_at.strftime('%Y-%m-%d %H:%M')}[/dim]")
         else:
-            console.print("\n[dim]No AI feedback available for this entry[/dim]")
+            console.print("\n[dim]No feedback available for this entry[/dim]")
     
     # Offer to continue conversation about this entry
     console.print()
@@ -658,6 +678,8 @@ def _chat_loop_native(console, chat_service, chat_id: int):
         recent_messages = messages[-6:]
         for msg in recent_messages:
             role, content = _coerce_msg(msg)
+            if content is None:
+                content = ""
             if role == "user":
                 md = Markdown(content)
                 console.print(Panel(
@@ -684,7 +706,7 @@ def _chat_loop_native(console, chat_service, chat_id: int):
         messages = list(chat_obj.messages) if chat_obj and chat_obj.messages else []
         if extra_messages:
             messages.extend(extra_messages)
-        console.clear()
+        console.clear(reset=False)  # Use reset=False to reduce flicker
         if messages:
             _render_messages(messages)
         else:
@@ -731,19 +753,20 @@ def _chat_loop_native(console, chat_service, chat_id: int):
             try:
                 with console.status(f"[dim]{icon('⏳ ', '')}Thinking...[/dim]", spinner="dots"):
                     chat_service.send_message(chat_id, user_input)
+                # Only refresh after successful message to minimize screen clearing
+                _refresh_view()
+                _show_hint()
             except Exception as e:
                 console.print(f"\n[red]{icon('❌ ', '')}Error: {e}[/red]\n")
-                console.print("[dim]Check that your AI provider is configured and running[/dim]\n")
+                console.print("[dim]Check that your provider is configured and running[/dim]\n")
                 if not Confirm.ask("Try again?", default=True):
                     console.print("[dim]Press Enter to continue...[/dim]")
                     input()
                     break
+                # Only refresh on error if user wants to try again
                 _refresh_view()
                 _show_hint()
                 continue
-            else:
-                _refresh_view()
-                _show_hint()
         
         except KeyboardInterrupt:
             console.print(f"\n\n[yellow]{icon('👋 ', '')}Chat saved. Returning to menu...[/yellow]\n")

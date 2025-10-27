@@ -66,7 +66,7 @@ def _trigger_onboarding():
             )
         )
         console.print(
-            "[dim]Note: AI feedback will not be available until you complete onboarding.[/dim]\n"
+            "[dim]Note: Feedback will not be available until you complete onboarding.[/dim]\n"
         )
         return False
     
@@ -95,7 +95,7 @@ def _trigger_onboarding():
 
 @click.command()
 @click.option("--quick", is_flag=True, help="Quick mode with fewer prompts")
-@click.option("--no-feedback", is_flag=True, help="Skip AI feedback generation")
+@click.option("--no-feedback", is_flag=True, help="Skip feedback generation")
 @click.option("--date", type=click.DateTime(formats=["%Y-%m-%d"]), help="Entry date (YYYY-MM-DD)")
 @click.option("--cash", type=float, help="Cash on hand")
 @click.option("--bank", type=float, help="Bank balance")
@@ -237,7 +237,7 @@ def _interactive_entry(quick: bool) -> dict:
         
         if not quick:
             console.print(f"\n[bold cyan]{icon('📝', 'Journal')} Journal[/bold cyan]")
-            notes = prompt_text("How was your day? (optional, press Enter to skip): ", multiline=False)
+            notes = prompt_text("How was your day? (optional, press Enter twice to finish): ", multiline=True)
         else:
             notes = None
         
@@ -285,7 +285,7 @@ def _edit_entry_data(entry_data: dict, quick: bool) -> dict:
         '10': ('gas_spent', icon('⛽', 'Gas') + " Gas spent", lambda: prompt_decimal("New gas spent: $", default="")),
         '11': ('stress_level', icon('🧘', 'Stress') + " Stress level", lambda: prompt_integer_range("New stress level (1-10): ", 1, 10)),
         '12': ('priority', icon('🎯', 'Priority') + " Priority", lambda: prompt_text("New priority: ", default="")),
-        '13': ('notes', icon('📝', 'Journal') + " Journal", lambda: prompt_text("How was your day?: ", multiline=False, default="")),
+        '13': ('notes', icon('📝', 'Journal') + " Journal", lambda: prompt_text("How was your day?: ", multiline=True, default="")),
     }
     
     try:
@@ -373,7 +373,7 @@ def _save_entry(entry_data: dict, no_feedback: bool = False):
         if not no_feedback:
             _generate_feedback_if_configured(db, entry)
         else:
-            console.print("\n[dim]Skipped AI feedback generation (--no-feedback flag)[/dim]")
+            console.print("\n[dim]Skipped feedback generation (--no-feedback flag)[/dim]")
         
         console.print(f"\n[cyan]View your entry:[/cyan] tracker show {entry.date}")
         
@@ -400,7 +400,7 @@ def _generate_feedback_if_configured(db, entry):
     if settings.ai_provider != "local" and not api_key:
         console.print(
             emphasize(
-                f"\n[yellow]{icon('💡', 'Tip')} Configure AI feedback with: tracker onboard[/yellow]",
+                f"\n[yellow]{icon('💡', 'Tip')} Configure feedback with: tracker onboard[/yellow]",
                 "configure ai tip",
             )
         )
@@ -410,14 +410,8 @@ def _generate_feedback_if_configured(db, entry):
         feedback_service = FeedbackService(db)
         
         # Show progress
-        with FeedbackProgress(f"{icon('🤖', 'AI')} Generating AI feedback..."):
-            feedback = feedback_service.regenerate_feedback(
-                entry.id,
-                settings.ai_provider,
-                api_key,
-                settings.ai_model,
-                settings.local_api_url if settings.ai_provider == "local" else None
-            )
+        with FeedbackProgress(f"{icon('🤖', 'AI')} Generating feedback..."):
+            feedback = feedback_service.generate_feedback(entry.id, regenerate=False)
         
         # Display feedback
         console.print()
@@ -426,10 +420,10 @@ def _generate_feedback_if_configured(db, entry):
     except Exception as e:
         console.print(
             emphasize(
-                f"\n[yellow]{icon('⚠️', 'Warning')} Could not generate AI feedback: {e}[/yellow]",
+                f"\n[yellow]{icon('⚠️', 'Warning')} Could not generate feedback: {e}[/yellow]",
                 "feedback generation failed",
             )
         )
         console.print("[dim]Your entry was saved successfully.[/dim]")
         console.print(f"\n[cyan]To retry feedback generation:[/cyan] tracker retry {entry.date}")
-        console.print(f"[cyan]To check AI configuration:[/cyan] tracker config show")
+        console.print(f"[cyan]To check configuration:[/cyan] tracker config show")

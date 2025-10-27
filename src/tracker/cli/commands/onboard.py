@@ -30,7 +30,7 @@ def onboard(reset):
     
     Guides you through:
     1. System configuration (data dir, timezone, currency)
-    2. AI provider setup and testing
+    2. Provider setup and testing
     3. Financial baseline snapshot
     4. Wellbeing baseline
     5. Budget targets
@@ -57,11 +57,11 @@ def onboard(reset):
     )
     config["system"] = collect_system_config(reset)
     
-    # Step 2: AI Provider Setup
+    # Step 2: Provider Setup
     console.print(
         "\n"
         + Panel.fit(
-            f"[bold cyan]{icon('🤖', 'AI')} Step 2/6: AI Provider Setup[/bold cyan]",
+            f"[bold cyan]{icon('🤖', 'AI')} Step 2/6: Provider Setup[/bold cyan]",
             border_style="cyan",
         )
     )
@@ -193,7 +193,7 @@ def collect_system_config(reset: bool) -> Dict[str, Any]:
 
 
 def collect_ai_config(reset: bool) -> Dict[str, Any]:
-    """Collect AI provider configuration with auto-detection"""
+    """Collect Provider configuration with auto-detection"""
     import os
     
     config = {}
@@ -226,7 +226,7 @@ def collect_ai_config(reset: bool) -> Dict[str, Any]:
     
     # Provider selection
     provider_options = ["openai", "anthropic", "openrouter", "local", "skip"]
-    console.print("Available AI providers:")
+    console.print("Available Providers:")
     console.print("  [cyan]openai[/cyan] - GPT-4, GPT-3.5-turbo (requires API key)")
     console.print("  [cyan]anthropic[/cyan] - Claude 3 Opus/Sonnet/Haiku (requires API key)")
     console.print("  [cyan]openrouter[/cyan] - 100+ models via unified API (requires API key)")
@@ -274,10 +274,10 @@ def collect_ai_config(reset: bool) -> Dict[str, Any]:
     # Test connection
     if config.get("api_key") or provider == "local":
         console.print("\n[dim]Testing connection...[/dim]")
-        # TODO: Test AI connection
+        # TODO: Test Connection
         console.print("[green]✓ Connection successful[/green]")
-    
-    console.print("[dim]✓ AI configuration complete[/dim]")
+
+    console.print("[dim]✓ Configuration complete[/dim]")
     return config
 
 
@@ -456,16 +456,16 @@ def display_summary(config: Dict[str, Any]):
     console.print()
     
     # AI
-    ai = config.get("ai", {})
+    config.get("ai", {})
     if ai.get("enabled"):
-        console.print(f"[cyan]AI Provider:[/cyan] {ai.get('provider', 'none')}")
+        console.print(f"[cyan]Provider:[/cyan] {ai.get('provider', 'none')}")
         console.print(f"[cyan]Model:[/cyan] {ai.get('model', 'default')}")
         if ai.get("api_key"):
             masked_key = ai["api_key"][:8] + "..." + ai["api_key"][-4:] if len(ai["api_key"]) > 12 else "***"
             console.print(f"[cyan]API Key:[/cyan] {masked_key}")
         console.print()
     else:
-        console.print("[yellow]AI feedback disabled (can enable later)[/yellow]\n")
+        console.print("[yellow]Peedback disabled (can enable later)[/yellow]\n")
     
     # Financial
     financial = config.get("financial", {})
@@ -509,8 +509,8 @@ def apply_configuration(config: Dict[str, Any]):
             f.write(f"ENCRYPTION_KEY={key}\n")
         console.print(f"  ✓ Generated encryption key in .env")
     
-    # 4. Save AI config to environment/keyring
-    ai = config.get("ai", {})
+    # 4. Save Config to environment/keyring
+    config.get("ai", {})
     if ai.get("enabled") and ai.get("api_key"):
         # Save to keyring if available
         try:

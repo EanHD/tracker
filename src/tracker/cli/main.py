@@ -12,7 +12,7 @@ from tracker.cli.ui.console import configure_accessibility, get_console, emphasi
 @click.pass_context
 @click.version_option(version="0.1.0")
 def cli(ctx, plain, no_color, no_emoji):
-    """Tracker - Daily logging app with AI feedback
+    """Tracker - Daily logging app with feedback
     
     Running 'tracker' without arguments launches the interactive TUI.
     Use 'tracker --help' to see all available commands.

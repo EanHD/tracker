@@ -3,6 +3,7 @@
 from decimal import Decimal
 from typing import Optional
 import textwrap
+import shutil
 
 from rich.panel import Panel
 
@@ -28,6 +29,94 @@ def format_currency(amount: Optional[Decimal]) -> str:
     if amount is None:
         return "N/A"
     return f"${amount:,.2f}"
+
+
+def format_wrapped_text(text: str, indent: str = "  ") -> str:
+    """
+    Format text with proper word wrapping based on terminal width.
+    
+    Args:
+        text: The text to wrap
+        indent: String to indent each line with
+        
+    Returns:
+        Formatted text with proper wrapping and indentation
+    """
+    if not text:
+        return ""
+    
+    # Get terminal width, fallback to 80 if not available
+    try:
+        terminal_width = shutil.get_terminal_size().columns
+    except (AttributeError, OSError):
+        terminal_width = 80
+    
+    # Calculate wrap width accounting for indentation and some padding
+    wrap_width = max(terminal_width - len(indent) - 4, 40)
+    
+    # Split into paragraphs first to preserve line breaks
+    paragraphs = text.split('\n')
+    formatted_paragraphs = []
+    
+    for paragraph in paragraphs:
+        if not paragraph.strip():
+            # Preserve empty lines
+            formatted_paragraphs.append("")
+            continue
+            
+        # Wrap each paragraph individually
+        wrapped_lines = textwrap.wrap(
+            paragraph,
+            width=wrap_width,
+            break_long_words=False,
+            break_on_hyphens=False,
+            replace_whitespace=False,
+        )
+        
+        # Add indentation to each line
+        if wrapped_lines:
+            formatted_paragraphs.extend([f"{indent}{line}" for line in wrapped_lines])
+        else:
+            formatted_paragraphs.append("")
+    
+    # Join paragraphs back together
+    return "\n".join(formatted_paragraphs)
+
+
+def _format_wrapped_text(text: str, indent: str = "  ") -> str:
+    """
+    Format text with proper word wrapping based on terminal width.
+    
+    Args:
+        text: The text to wrap
+        indent: String to indent each line with
+        
+    Returns:
+        Formatted text with proper wrapping and indentation
+    """
+    if not text:
+        return ""
+    
+    # Get terminal width, fallback to 80 if not available
+    try:
+        terminal_width = shutil.get_terminal_size().columns
+    except (AttributeError, OSError):
+        terminal_width = 80
+    
+    # Calculate wrap width accounting for indentation and some padding
+    wrap_width = max(terminal_width - len(indent) - 4, 40)
+    
+    # Wrap the text preserving word boundaries
+    wrapped_lines = textwrap.wrap(
+        text,
+        width=wrap_width,
+        break_long_words=False,
+        break_on_hyphens=False,
+        replace_whitespace=False,
+    )
+    
+    # Add indentation to each line
+    return "\n".join(f"{indent}{line}" for line in wrapped_lines)
 
 
 def display_entry(entry, show_feedback: bool = False):
@@ -79,14 +168,9 @@ def display_entry(entry, show_feedback: bool = False):
     if entry.notes:
         lines.append("")
         lines.append(f"[bold cyan]{icon('📝', 'Journal')} Journal[/bold cyan]")
-        wrapped_lines = textwrap.wrap(
-            entry.notes,
-            width=70,
-            break_long_words=False,
-            break_on_hyphens=False,
-        )
-        for line in wrapped_lines:
-            lines.append(f"  {line}")
+        # Use dynamic width based on console size with proper terminal detection
+        wrapped_journal = format_wrapped_text(entry.notes, indent="  ")
+        lines.append(wrapped_journal)
 
     # Create panel
     panel = Panel(

@@ -21,8 +21,8 @@ def save_provider_backup(env_path: Path, provider: str, config_dict: dict) -> No
     lines.append(f"# Last saved: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
     lines.append("\n")
     
-    # AI Provider config
-    lines.append("# AI Provider Configuration\n")
+    # Provider config
+    lines.append("# Provider Configuration\n")
     lines.append(f"AI_PROVIDER={provider}\n")
     
     if config_dict.get('api_key'):
@@ -107,10 +107,10 @@ def write_env_file(config_dict: dict, env_path: Path) -> None:
         with open(env_path, 'r') as f:
             existing_lines = f.readlines()
     
-    # Filter out AI provider lines (we'll add new ones)
+    # Filter out provider lines (we'll add new ones)
     ai_section_markers = {
-        '# AI Provider Configuration',
-        '# AI Configuration',
+        '# Provider Configuration',
+        '# Configuration',
         '# Local AI',
         'AI_PROVIDER=',
         'ANTHROPIC_API_KEY=',
@@ -129,14 +129,14 @@ def write_env_file(config_dict: dict, env_path: Path) -> None:
     for line in existing_lines:
         stripped = line.strip()
         
-        # Check if this is an AI config line
+        # Check if this is an config line
         is_ai_line = any(marker in stripped for marker in ai_section_markers)
         
         if is_ai_line:
             skip_until_blank = True
             continue
         
-        # Stop skipping after blank line following AI section
+        # Stop skipping after blank line following section
         if skip_until_blank and not stripped:
             skip_until_blank = False
             continue
@@ -144,17 +144,17 @@ def write_env_file(config_dict: dict, env_path: Path) -> None:
         if not skip_until_blank:
             filtered_lines.append(line)
     
-    # Write file with filtered content + new AI config
+    # Write file with filtered content + new config
     with open(env_path, 'w') as f:
-        # Write existing non-AI config
+        # Write existing non-config
         if filtered_lines:
             f.writelines(filtered_lines)
             # Ensure separation
             if filtered_lines and not filtered_lines[-1].endswith('\n'):
                 f.write('\n')
         
-        # Write new AI configuration
-        f.write(f"\n# AI Provider Configuration\n")
+        # Write new configuration
+        f.write(f"\n# Provider Configuration\n")
         f.write(f"AI_PROVIDER={config_dict['provider']}\n")
         
         if config_dict.get('api_key'):
@@ -202,9 +202,9 @@ def setup():
     env_path = get_env_file_path()
     console.print(f"[dim]Configuration file: {env_path}[/dim]\n")
     
-    # AI Provider
+    # Provider
     console.print(
-        f"[bold cyan]{icon('🤖', 'AI')} AI Provider Configuration[/bold cyan]"
+        f"[bold cyan]{icon('🤖', 'AI')} Provider Configuration[/bold cyan]"
     )
     
     # Check for existing backups
@@ -219,7 +219,7 @@ def setup():
         console.print(f"[dim]Found saved configs for: {', '.join(available_backups)}[/dim]\n")
     
     provider = Prompt.ask(
-        "Choose AI provider",
+        "Choose provider",
         choices=["anthropic", "openai", "openrouter", "local"],
         default="local"
     )
@@ -278,14 +278,14 @@ def setup():
             env_var = "ANTHROPIC_API_KEY"
         elif provider == "openai":
             console.print("\n[dim]Get your API key from: https://platform.openai.com/api-keys[/dim]")
-            api_key = Prompt.ask("OpenAI API key", password=True)
+            api_key = Prompt.ask("OpenAPI key", password=True)
             env_var = "OPENAI_API_KEY"
         elif provider == "openrouter":
             console.print("\n[dim]Get your API key from: https://openrouter.ai/keys[/dim]")
             api_key = Prompt.ask("OpenRouter API key", password=True)
             env_var = "OPENROUTER_API_KEY"
         else:  # local
-            console.print("\n[dim]Using local AI (Ollama). No API key needed.[/dim]")
+            console.print("\n[dim]Using local (Ollama). No API key needed.[/dim]")
             console.print("[dim]Make sure Ollama is running: http://localhost:11434[/dim]")
             api_key = None
             env_var = None
@@ -299,9 +299,9 @@ def setup():
             elif provider == "openai":
                 model = "gpt-4o-mini"
             elif provider == "openrouter":
-                model = "anthropic/claude-3.5-sonnet"
+                model = "x-ai/grok-4-fast"
             else:  # local
-                model = "llama3.2:3b"
+                model = "granite4:micro-h"
         else:
             if provider == "anthropic":
                 console.print("\n[dim]Available models: claude-3-opus, claude-3-sonnet, claude-3-haiku[/dim]")
@@ -312,12 +312,12 @@ def setup():
                 console.print("[yellow]Note: GPT-5 models require Responses API (not yet supported)[/yellow]")
                 model = Prompt.ask("Model name", default="gpt-4o-mini")
             elif provider == "openrouter":
-                console.print("\n[dim]Available models: anthropic/claude-3.5-sonnet, openai/gpt-4, etc.[/dim]")
-                model = Prompt.ask("Model name", default="anthropic/claude-3.5-sonnet")
+                console.print("\n[dim]Available models: x-ai/grok-4-fast, openai/gpt-4, etc.[/dim]")
+                model = Prompt.ask("Model name", default="x-ai/grok-4-fast")
             else:  # local
                 console.print("\n[dim]Available models depend on your Ollama installation[/dim]")
                 console.print("[dim]Common: llama3.2:3b, llama3.2:1b, gemma2:2b[/dim]")
-                model = Prompt.ask("Model name", default="llama3.2:3b")
+                model = Prompt.ask("Model name", default="granite4:micro-h")
     
     # Encryption key
     console.print("\n[bold cyan]Encryption Configuration[/bold cyan]")
@@ -337,7 +337,7 @@ def setup():
     console.print(
         f"\n[bold green]{icon('✅', 'Summary')} Configuration Summary[/bold green]\n"
     )
-    console.print(f"AI Provider: [cyan]{provider}[/cyan]")
+    console.print(f"Provider: [cyan]{provider}[/cyan]")
     console.print(f"Model: [cyan]{model}[/cyan]")
     
     if api_key:
@@ -452,7 +452,7 @@ def show():
     console.print(f"  Encryption: {(encryption_icon + ' ') if encryption_icon else ''}{encryption_label}")
     
     # AI
-    console.print("\n[bold cyan]AI Provider[/bold cyan]")
+    console.print("\n[bold cyan]Provider[/bold cyan]")
     console.print(f"  Provider: {settings.ai_provider}")
     
     # Show provider-specific model

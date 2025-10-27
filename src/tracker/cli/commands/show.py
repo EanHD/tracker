@@ -12,7 +12,7 @@ from tracker.services.entry_service import EntryService
 
 @click.command()
 @click.argument("date_arg", required=False)
-@click.option("--no-feedback", is_flag=True, help="Hide AI feedback")
+@click.option("--no-feedback", is_flag=True, help="Hide feedback")
 def show(date_arg, no_feedback):
     """
     Show a daily entry
@@ -23,7 +23,7 @@ def show(date_arg, no_feedback):
     - 'yesterday'
     - Relative like '-1', '-2' for days ago
     
-    By default, AI feedback is shown if available.
+    By default, feedback is shown if available.
     Use --no-feedback to hide it.
     """
     

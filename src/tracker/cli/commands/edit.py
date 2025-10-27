@@ -39,7 +39,7 @@ from tracker.services.feedback_service import FeedbackService
 @click.option("--debts", type=float, help="Update total debts")
 @click.option("--notes", type=str, help="Update journal entry")
 @click.option("--priority", type=str, help="Update priority")
-@click.option("--regenerate-feedback", is_flag=True, help="Regenerate AI feedback after editing")
+@click.option("--regenerate-feedback", is_flag=True, help="Regenerate feedback after editing")
 def edit(
     entry_date: Optional[datetime],
     stress: Optional[int],
@@ -178,13 +178,13 @@ def edit(
                         "substantial changes detected",
                     )
                 )
-                if prompt_yes_no("Regenerate AI feedback?", default=True):
+                if prompt_yes_no("Regenerate feedback?", default=True):
                     regenerate_feedback = True
             
             if regenerate_feedback:
                 console.print(
                     emphasize(
-                        f"\n[cyan]{icon('🤖', 'AI')} Regenerating AI feedback...[/cyan]",
+                        f"\n[cyan]{icon('💭')} Regenerating feedback...[/cyan]",
                         "regenerating feedback",
                     )
                 )
@@ -355,7 +355,7 @@ def prompt_for_updates(entry) -> Optional[EntryUpdate]:
         updates['priority'] = priority if priority else None
     
     console.print(f"\n[bold cyan]{icon('📓', 'Journal')} Journal[/bold cyan]")
-    notes = prompt_text("How was your day?: ", default=entry.notes or "", multiline=False)
+    notes = prompt_text("How was your day?: ", default=entry.notes or "", multiline=True)
     if notes != (entry.notes or ""):
         updates['notes'] = notes if notes else None
     

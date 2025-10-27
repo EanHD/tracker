@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 @click.group()
 def chat():
-    """AI chat conversations"""
+    """Chat conversations"""
     pass
 
 
@@ -234,7 +234,7 @@ def _chat_loop(console: Console, chat_service: ChatService, chat_id: int):
                 
             except Exception as e:
                 console.print(f"\n[red]{icon('❌ ', '')}Error: {e}[/red]\n")
-                console.print("[dim]Check that your AI provider is configured and running[/dim]\n")
+                console.print("[dim]Check that your provider is configured and running[/dim]\n")
                 if Confirm.ask("Try again?", default=True):
                     continue
                 else:

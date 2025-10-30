@@ -11,6 +11,12 @@ from rich.table import Table
 
 from tracker.core.database import get_db
 from tracker.services.profile_service import ProfileService
+from tracker.cli.ui.display import (
+    display_error,
+    display_success,
+    format_progress_bar,
+    format_metric_bar,
+)
 
 
 console = Console()
@@ -268,10 +274,17 @@ def view(user_id: int):
     )
     
     emotional = summary["emotional_baseline"]
+    
+    # Format energy and stress with progress bars
+    energy_val = float(emotional['energy'])
+    stress_val = float(emotional['stress'])
+    energy_bar = format_progress_bar(energy_val, width=12, show_value=True)
+    stress_bar = format_progress_bar(stress_val, width=12, show_value=True)
+    
     table.add_row(
         "Emotional Baseline",
-        f"Energy: {emotional['energy']}/10\n"
-        f"Stress: {emotional['stress']}/10"
+        f"Energy: {energy_bar}\n"
+        f"Stress: {stress_bar}"
     )
     
     if "work" in summary:

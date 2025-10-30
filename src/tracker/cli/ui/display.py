@@ -31,6 +31,75 @@ def format_currency(amount: Optional[Decimal]) -> str:
     return f"${amount:,.2f}"
 
 
+def format_progress_bar(
+    value: float,
+    max_value: float = 10.0,
+    width: int = 15,
+    empty_char: str = "░",
+    filled_char: str = "█",
+    show_value: bool = True,
+) -> str:
+    """
+    Create a visual progress bar with optional value display.
+    
+    Args:
+        value: Current value (0-10)
+        max_value: Maximum value for the scale (default 10)
+        width: Width of the progress bar in characters
+        empty_char: Character for empty portion
+        filled_char: Character for filled portion
+        show_value: Whether to show the numeric value
+        
+    Returns:
+        Formatted progress bar string
+    """
+    # Ensure value is within bounds
+    normalized = min(max(value, 0), max_value)
+    percentage = (normalized / max_value) * 100
+    filled = int((normalized / max_value) * width)
+    
+    # Build the bar
+    bar = filled_char * filled + empty_char * (width - filled)
+    
+    # Color based on value (for stress: low=green, high=red; for energy: low=red, high=green)
+    if value <= 3:
+        color = "green"
+    elif value <= 6:
+        color = "yellow"
+    else:
+        color = "red"
+    
+    # Format output
+    if show_value:
+        return f"[{color}]{bar}[/{color}] {value:.1f}/10"
+    else:
+        return f"[{color}]{bar}[/{color}]"
+
+
+def format_metric_bar(
+    label: str,
+    value: float,
+    max_value: float = 10.0,
+    width: int = 15,
+    show_value: bool = True,
+) -> str:
+    """
+    Format a metric with label and progress bar.
+    
+    Args:
+        label: The label for this metric
+        value: Current value
+        max_value: Maximum value on the scale
+        width: Width of progress bar
+        show_value: Whether to show the numeric value
+        
+    Returns:
+        Formatted metric string with label and bar
+    """
+    bar = format_progress_bar(value, max_value, width, show_value=show_value)
+    return f"{label}: {bar}"
+
+
 def format_wrapped_text(text: str, indent: str = "  ") -> str:
     """
     Format text with proper word wrapping based on terminal width.

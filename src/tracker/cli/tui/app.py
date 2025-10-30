@@ -5,6 +5,7 @@ from rich.prompt import Prompt, Confirm
 import textwrap
 
 from tracker.cli.ui.console import emphasize, get_console, icon, qualitative_scale
+from tracker.cli.ui.display import format_progress_bar
 
 
 def _format_notes(notes):
@@ -1388,8 +1389,15 @@ def handle_profile():
                 
                 emotional = summary["emotional_baseline"]
                 table.add_row("", "")  # Spacer
-                table.add_row("Energy", f"{emotional['energy']}/10")
-                table.add_row("Stress", f"{emotional['stress']}/10")
+                
+                # Format energy and stress with progress bars
+                energy_val = float(emotional['energy'])
+                stress_val = float(emotional['stress'])
+                energy_bar = format_progress_bar(energy_val, width=12, show_value=True)
+                stress_bar = format_progress_bar(stress_val, width=12, show_value=True)
+                
+                table.add_row("Energy", energy_bar)
+                table.add_row("Stress", stress_bar)
                 
                 console.print(table)
                 console.print()

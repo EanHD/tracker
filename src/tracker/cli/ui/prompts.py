@@ -171,7 +171,9 @@ def prompt_text(
 
 def _prompt_multiline_text(message: str, default: Optional[str] = None) -> Optional[str]:
     """
-    Custom multiline text input that handles "Press Enter on blank line to finish" behavior.
+    Custom multiline text input using prompt_toolkit's native multiline support.
+    
+    Uses Esc+Enter to finish input (standard for prompt_toolkit multiline mode).
 
     Args:
         message: The prompt message
@@ -184,22 +186,18 @@ def _prompt_multiline_text(message: str, default: Optional[str] = None) -> Optio
 
     # Show the prompt message
     console.print(f"[green]{message}[/green]")
-    console.print("[dim]Press Enter on a blank line to finish[/dim]")
-
-    lines = []
+    console.print("[dim](Esc+Enter to finish, or type normally and press Esc then Enter)[/dim]")
 
     try:
-        while True:
-            # Use prompt_toolkit for each line
-            line = prompt("", multiline=False)
-
-            if not line.strip():
-                # Single blank line - finish input
-                break
-            
-            lines.append(line)
-
-        result = "\n".join(lines).strip()
+        # Use prompt_toolkit's native multiline mode
+        # This handles word wrapping properly and only treats explicit newlines as such
+        result = prompt(
+            "",
+            multiline=True,
+            default=default or "",
+        )
+        
+        result = result.strip()
         return result if result else None
 
     except KeyboardInterrupt:

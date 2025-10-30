@@ -171,7 +171,7 @@ def prompt_text(
 
 def _prompt_multiline_text(message: str, default: Optional[str] = None) -> Optional[str]:
     """
-    Custom multiline text input that handles "Enter twice to finish" behavior.
+    Custom multiline text input that handles "Press Enter on blank line to finish" behavior.
 
     Args:
         message: The prompt message
@@ -184,30 +184,20 @@ def _prompt_multiline_text(message: str, default: Optional[str] = None) -> Optio
 
     # Show the prompt message
     console.print(f"[green]{message}[/green]")
-    console.print("[dim]Press Enter twice on empty lines to finish[/dim]")
+    console.print("[dim]Press Enter on a blank line to finish[/dim]")
 
     lines = []
-    consecutive_empty = 0
 
     try:
         while True:
             # Use prompt_toolkit for each line
-            line = prompt("", multiline=False).strip()
+            line = prompt("", multiline=False)
 
-            if not line:
-                consecutive_empty += 1
-                if consecutive_empty >= 2:
-                    # Two consecutive empty lines - finish input
-                    break
-            else:
-                consecutive_empty = 0
-
+            if not line.strip():
+                # Single blank line - finish input
+                break
+            
             lines.append(line)
-
-        # Join lines with newlines, but filter out the empty lines at the end
-        # (the last two empty lines are just for finishing)
-        while lines and not lines[-1]:
-            lines.pop()
 
         result = "\n".join(lines).strip()
         return result if result else None

@@ -188,7 +188,7 @@ def edit(
             if regenerate_feedback:
                 console.print(
                     emphasize(
-                        f"\n[cyan]{icon('💭')} Regenerating feedback...[/cyan]",
+                        f"\n[cyan]{icon('💭', 'Tracker')} Regenerating feedback...[/cyan]",
                         "regenerating feedback",
                     )
                 )

@@ -126,6 +126,71 @@ class AIClient(ABC):
                     if short_term:
                         prompt += "  Recent goals: " + ", ".join([g['goal'] for g in short_term[:2]]) + "\n"
             
+            # ===== NEW MEMORY LAYERS =====
+            
+            # Recent entry summaries (7-day context)
+            recent_summary = profile_context.get('recent_summary')
+            if recent_summary and recent_summary.get('days_logged', 0) > 0:
+                prompt += f"\n## Recent Week (Last 7 days)\n"
+                prompt += f"  Days logged: {recent_summary.get('days_logged', 0)}/7\n"
+                prompt += f"  Average stress: {recent_summary.get('avg_stress', 'N/A')}/10 ({recent_summary.get('stress_trend', 'stable')})\n"
+                prompt += f"  Average income: ${recent_summary.get('avg_income', 0):.2f}/day ({recent_summary.get('income_trend', 'stable')})\n"
+                prompt += f"  Average spending: ${recent_summary.get('avg_spending', 0):.2f}/day ({recent_summary.get('spending_trend', 'stable')})\n"
+            
+            # Recent wins
+            recent_wins = profile_context.get('recent_wins', [])
+            if recent_wins:
+                prompt += f"\n## Recent Wins\n"
+                for win in recent_wins[:3]:  # Limit to 3 most recent
+                    prompt += f"  {win}\n"
+            
+            # Weekly patterns
+            weekly_patterns = profile_context.get('weekly_patterns')
+            if weekly_patterns:
+                # Find the most stressful and best days
+                if len(weekly_patterns) > 0:
+                    sorted_by_stress = sorted(weekly_patterns.items(), key=lambda x: x[1].get('avg_stress', 5), reverse=True)
+                    worst_day = sorted_by_stress[0]
+                    prompt += f"\n## Weekly Patterns\n"
+                    prompt += f"  Typically most stressful: {worst_day[0]} (avg {worst_day[1].get('avg_stress', 'N/A')}/10)\n"
+                    best_day = sorted_by_stress[-1]
+                    prompt += f"  Typically least stressful: {best_day[0]} (avg {best_day[1].get('avg_stress', 'N/A')}/10)\n"
+            
+            # Momentum context
+            momentum = profile_context.get('momentum')
+            if momentum:
+                prompt += f"\n## Current Momentum\n"
+                if 'stress_vs_yesterday' in momentum:
+                    delta = momentum['stress_vs_yesterday']
+                    direction = "↑ up" if delta > 0 else "↓ down" if delta < 0 else "→ same"
+                    prompt += f"  Stress vs yesterday: {direction} ({delta:+.1f})\n"
+                if 'income_vs_7day_avg' in momentum:
+                    prompt += f"  Income vs 7-day avg: ${momentum['income_vs_7day_avg']:+.2f}\n"
+                if 'stress_vs_7day_avg' in momentum:
+                    prompt += f"  Stress vs 7-day avg: {momentum['stress_vs_7day_avg']:+.1f} points\n"
+            
+            # Field consistency
+            consistency = profile_context.get('field_consistency')
+            if consistency:
+                prompt += f"\n## Tracking Habits\n"
+                if consistency.get('stress_trend'):
+                    prompt += f"  Stress trend: {consistency['stress_trend']}\n"
+                prompt += f"  Consistently logging: stress ({consistency.get('stress_logged', 0)}%), spending ({consistency.get('spending_tracked', 0)}%), notes ({consistency.get('notes_written', 0)}%)\n"
+            
+            # Journal sentiment
+            sentiment = profile_context.get('journal_sentiment')
+            if sentiment:
+                prompt += f"\n## Journal Sentiment\n"
+                prompt += f"  Overall mood: {sentiment.get('overall_sentiment', 'neutral')}\n"
+                prompt += f"  Trend: {sentiment.get('sentiment_direction', 'stable')}\n"
+            
+            # Recent milestones
+            milestones = profile_context.get('milestones')
+            if milestones:
+                prompt += f"\n## Recent Life Events\n"
+                for milestone in milestones[:3]:  # Last 3 milestones
+                    prompt += f"  ({milestone.get('date', 'N/A')}): {milestone.get('description', 'N/A')}\n"
+            
             prompt += "\n---\n\n"
         
         # Add character context if available

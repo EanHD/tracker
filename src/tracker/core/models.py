@@ -229,6 +229,7 @@ class UserProfile(Base):
     # Preferences
     communication_style = Column(String(500), nullable=True)
     reminder_preferences = Column(Text, nullable=True)  # JSON: when to get reminders
+    milestones = Column(Text, nullable=True)  # JSON: {date, event_type, description} for life events
     
     # Meta
     total_entries = Column(Integer, default=0, nullable=False)

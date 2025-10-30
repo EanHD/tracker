@@ -136,6 +136,16 @@ class FeedbackService:
                     profile_context = profile_service.get_ai_context(entry.user_id)
                     # Update entry stats
                     profile_service.update_entry_stats(entry.user_id, entry.date)
+                    
+                    # ADD ALL NEW MEMORY LAYERS
+                    profile_context["recent_summary"] = profile_service.get_recent_entry_summary(entry.user_id, days=7)
+                    profile_context["recent_wins"] = profile_service.get_recent_wins(entry.user_id, days=30)
+                    profile_context["weekly_patterns"] = profile_service.get_weekly_patterns(entry.user_id, lookback_days=42)
+                    profile_context["momentum"] = profile_service.get_momentum_context(entry.user_id, entry)
+                    profile_context["milestones"] = profile_service.get_milestone_context(entry.user_id, days=30)
+                    profile_context["field_consistency"] = profile_service.get_field_consistency(entry.user_id, days=30)
+                    profile_context["journal_sentiment"] = profile_service.get_journal_sentiment(entry.user_id, days=30)
+                    
                 except Exception:
                     profile_context = {}
                 

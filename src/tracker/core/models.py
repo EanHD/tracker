@@ -372,3 +372,59 @@ class ChatMessage(Base):
     __table_args__ = (
         Index("ix_chat_messages_chat_created", "chat_id", "created_at"),
     )
+
+
+class CashFlowEvent(Base):
+    """Cash flow event for tracking generic money loops
+    
+    Sign convention: positive amount = outflow (expense), negative = inflow (income)
+    This allows consistent handling across all event types.
+    """
+    
+    __tablename__ = "cash_flow_events"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    event_date = Column(Date, nullable=False, index=True)
+    
+    # Event classification
+    event_type = Column(
+        String(50), 
+        nullable=False, 
+        index=True
+    )  # 'income'|'bill'|'transfer'|'spend'|'advance'|'repayment'|'fee'
+    provider = Column(String(100), nullable=True, index=True)  # User-defined: 'acorns_checking', 'tool_truck', 'advance_app'
+    category = Column(String(100), nullable=True)  # 'gas', 'food', 'rent', 'subscription', 'tools', 'loan'
+    
+    # Amount stored in cents to avoid float precision issues
+    # Positive = outflow (expense), Negative = inflow (income)
+    amount_cents = Column(Integer, nullable=False)
+    
+    # Account tracking
+    account = Column(String(100), nullable=True)  # 'chase', 'cash', 'wallet:x'
+    
+    # Additional context
+    memo = Column(Text, nullable=True)
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    
+    # Relationship
+    user = relationship("User")
+    
+    # Indexes for efficient queries
+    __table_args__ = (
+        Index("ix_cfe_user_date", "user_id", "event_date"),
+        Index("ix_cfe_type_provider", "event_type", "provider"),
+    )
+    
+    @property
+    def amount(self) -> Decimal:
+        """Get amount as Decimal (in dollars)"""
+        return Decimal(self.amount_cents) / 100
+    
+    @amount.setter
+    def amount(self, value: Decimal):
+        """Set amount from Decimal (in dollars)"""
+        self.amount_cents = int(value * 100)

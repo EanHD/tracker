@@ -44,11 +44,17 @@ htmlcov/
 !.env.example
 .env.local
 
-# Database
+# Database (Contains personal data - NEVER COMMIT!)
 *.db
 *.db-journal
 *.sqlite
 *.sqlite3
+tracker.db*
+
+# User data directories (Contains personal profiles and config - NEVER COMMIT!)
+~/.config/tracker/
+.config/tracker/
+**/tracker.db
 
 # Logs
 *.log
@@ -60,6 +66,12 @@ Thumbs.db
 
 # Project specific
 ~/.config/tracker/
+
+# Personal data files (NEVER COMMIT!)
+bills_and_debts.csv
+personal_*.csv
+my_*.csv
+/tmp/bills_and_debts.csv
 
 #AI artifacts (keep essential docs tracked)
 CONFIGURATION_SUMMARY.md
@@ -81,4 +93,5 @@ tests/
 # Exports & personal backups
 tracker_export_*.json
 PROFILE_FEATURE_SUMMARY.txt
+PERSONAL_DATA_PROTECTION.md
 .aider*

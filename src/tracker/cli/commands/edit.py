@@ -304,11 +304,11 @@ def prompt_for_updates(entry) -> Optional[EntryUpdate]:
     
     # Financial fields
     console.print(f"[bold cyan]{icon('💰', 'Finance')} Financial[/bold cyan]")
-    cash = prompt_decimal("Cash on hand: $", default=str(entry.cash_on_hand) if entry.cash_on_hand is not None else None)
+    cash = prompt_decimal("Cash on hand: $", default=str(entry.cash_on_hand) if entry.cash_on_hand is not None else None, allow_negative=False)
     if cash != entry.cash_on_hand:
         updates['cash_on_hand'] = cash
     
-    bank = prompt_decimal("Bank balance: $", default=str(entry.bank_balance) if entry.bank_balance is not None else None)
+    bank = prompt_decimal("Bank balance: $", default=str(entry.bank_balance) if entry.bank_balance is not None else None, allow_negative=True)
     if bank != entry.bank_balance:
         updates['bank_balance'] = bank
     
@@ -320,7 +320,7 @@ def prompt_for_updates(entry) -> Optional[EntryUpdate]:
     if bills != entry.bills_due_today:
         updates['bills_due_today'] = bills
     
-    debts = prompt_decimal("Total debts: $", default=str(entry.debts_total) if entry.debts_total is not None else None)
+    debts = prompt_decimal("Total debts: $", default=str(entry.debts_total) if entry.debts_total is not None else None, allow_negative=True)
     if debts != entry.debts_total:
         updates['debts_total'] = debts
     

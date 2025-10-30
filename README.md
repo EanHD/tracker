@@ -5,16 +5,18 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Docker](https://img.shields.io/badge/docker-ready-brightgreen.svg)](https://hub.docker.com/r/eanhd/daily-tracker)
 
-A powerful daily tracking application with AI-powered insights. Track finances, work patterns, wellbeing, and receive personalized feedback from multiple AI providers. **Use it your way**: traditional CLI commands, interactive TUI menu, or REST API for custom frontends.
+A powerful daily tracking application with AI-powered insights and natural language commands. Track finances, work patterns, wellbeing, and receive personalized feedback from multiple AI providers. **Use it your way**: traditional CLI commands, interactive TUI menu with natural language financial adjustments, or REST API for custom frontends.
 
 ## ✨ Features
 
 ### Core Functionality
 - 📝 **Rich CLI Interface** - Beautiful terminal UI with Rich library
 - 🎨 **Interactive TUI Mode** - Full-screen menu-driven interface with Textual
+- ❓ **Help (Plain Sentences)** - **NEW!** Talk to your finances: "paid off my Slate card" or "lower EarnIn to 300"
 - 🤖 **Multi-Provider AI** - OpenAI, Anthropic, OpenRouter, or Local models
-- 👤 **User Profiles** - **NEW!** Personalize AI feedback with your context (work, goals, preferences)
-- 🧠 **Philosophy Engine** - **NEW!** AI mentor system with 19 principles from Ramsey, Kiyosaki, and more
+- 👤 **User Profiles** - Personalize AI feedback with your context (work, goals, preferences)
+- 🧠 **Philosophy Engine** - AI mentor system with 19 principles from Ramsey, Kiyosaki, and more
+- 💰 **Cash Flow Loops** - Track repeating money cycles (advances, BNPL, auto-debits) with loop strain analysis
 - 📊 **Comprehensive Tracking** - Finance, work hours, stress, sleep, exercise, social time
 - 🔒 **Privacy-First** - Local SQLite database, encrypted sensitive data, no cloud storage
 - 🔍 **Full-Text Search** - Find entries with keyword highlighting
@@ -182,6 +184,17 @@ Navigate with arrow keys, use hotkeys (`n` for new entry, `v` to view, etc.), an
 - Viewing statistics and achievements
 - Learning available features
 
+#### Profile Screen Features
+The **Profile** menu (option 9) shows your personalized dashboard with:
+- **Financial Snapshot**: Weekly pay, recurring bills, essentials, debts
+- **Current Week Forecast**: Net position with color-coded health (green ≥0, yellow >-100, red <-100)
+- **Mini-Insights Chips**: One-tap adjustments like "[Lower EarnIn]" or "[Defer Car Loan 1w]" when conditions are met
+- **Privacy Mode**: Toggle with 'v' to mask amounts as "***" in sensitive views
+- **Keybindings**: f=Forecast, e=Edit Config, r=Review Week, c1/c2=Apply chips
+
+#### Demo Mode
+Try features without setup: `TRACKER_MODE=demo tracker`
+
 [📖 TUI Tips](docs/USER_GUIDE.md#interactive-tui-mode)
 
 ### 2. CLI Commands (Power Users & Automation)
@@ -280,6 +293,14 @@ tracker profile setup    # Interactive profile wizard
 tracker profile view     # View your profile
 tracker profile update   # Update sections
 tracker profile checkin  # Monthly check-in
+
+# Cash Flow Tracking (NEW!)
+tracker cashflow add-event        # Record money events
+tracker cashflow week             # Weekly summary with loops
+tracker cashflow month            # Monthly report & trends
+tracker cashflow import data.csv  # Bulk CSV import
+tracker cashflow config-show      # View configuration
+tracker cashflow config-set KEY VALUE  # Update settings
 
 # Analysis
 tracker stats --days 7   # Statistics and trends
@@ -382,6 +403,92 @@ The AI automatically:
 | **Behavioral Economics** | Momentum Over Math, Simplify Goals |
 
 📖 **Learn more**: See `docs/USER_GUIDE.md#philosophy-engine` for full documentation.
+
+## 💰 Cash Flow Loop Tracking
+
+**NEW!** Model any repeating money loop without hardcoding brand names.
+
+### What Are Loops?
+Loops are recurring money cycles that affect your cash flow:
+- **Payday Advances** - Get money now, repay later
+- **Buy Now Pay Later (BNPL)** - Split purchases into payments  
+- **Auto-Debits** - Tool trucks, subscriptions, recurring bills
+- **Family Loans** - IOUs and informal arrangements
+
+### Key Features
+- ✅ **Provider Agnostic** - Define YOUR providers (no EarnIn/Klarna hardcoding)
+- ✅ **Loop Strain Analysis** - See true impact with "with vs without loops" comparison
+- ✅ **Week-over-Week Trends** - Track if usage is increasing or decreasing
+- ✅ **Streak Tracking** - See weeks without using each loop
+- ✅ **CSV Import** - Bulk import historical transactions
+- ✅ **Configurable Payroll** - Thursday night cadence by default
+
+### Quick Start
+
+```bash
+# View default configuration
+tracker cashflow config-show
+
+# Record events
+tracker cashflow add-event --type spend --category gas --amount 45.50
+tracker cashflow add-event --type advance --provider my_app --amount -200
+tracker cashflow add-event --type income --amount -1200
+
+# Weekly summary
+tracker cashflow week
+
+# Output shows:
+# - Income and essentials (gas, food, rent)
+# - Per-loop summaries (inflows, outflows, net)
+# - End-of-week cash WITH loops vs WITHOUT loops
+# - Loop strain (the difference - how much you're relying on loops)
+```
+
+### Example Output
+
+```
+📊 Week Summary: 2025-10-24 → 2025-10-30
+(Thu payroll cadence)
+
+Income: $1,000.00
+
+Essentials:
+  Gas          $45.50
+  Food         $85.00
+
+Loops:
+  pay_advance_loop:
+    +$200.00 inflow / -$0.00 outflow → net -$200.00
+    (↓ $100.00 vs last week)
+
+Net Change This Week:
+  With loops:    $669.50
+  Without loops: $869.50
+  Loop strain:   $200.00   ← You're relying on the advance
+```
+
+### Configuration
+
+Customize at `~/.config/tracker/cashflow.toml`:
+
+```toml
+[payroll]
+payday_is_thursday = true
+week_start = "FRI"
+
+[providers.my_advance_app]
+type = "advance"
+account = "checking"
+
+[[loops]]
+name = "advance_cycle"
+includes = [
+  { event_type = "advance", provider = "my_advance_app" },
+  { event_type = "repayment", provider = "my_advance_app" }
+]
+```
+
+📖 **Full Guide**: See `docs/CASHFLOW_GUIDE.md` for complete documentation with use cases, CSV format, and troubleshooting.
 
 ## 🏗️ Architecture
 

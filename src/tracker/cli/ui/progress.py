@@ -8,7 +8,7 @@ from tracker.cli.ui.console import emphasize, get_console
 class FeedbackProgress:
     """Progress indicator for feedback generation"""
 
-    def __init__(self, message: str = "Generating AI feedback..."):
+    def __init__(self, message: str = "Generating Tracker feedback..."):
         self.message = message
         self.progress = None
         self.task_id = None

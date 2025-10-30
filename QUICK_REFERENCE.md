@@ -78,6 +78,25 @@ tracker chat list         # Show conversations
 tracker chat open 5       # Resume chat ID 5
 ```
 
+### Cash Flow (NEW!)
+```bash
+# Record events
+tracker cashflow add-event --type income --amount -1200
+tracker cashflow add-event --type spend --category gas --amount 45.50
+tracker cashflow add-event --type advance --provider my_app --amount -200
+
+# View summaries
+tracker cashflow week                    # Weekly summary
+tracker cashflow month --month 2025-10   # Monthly report
+
+# Import data
+tracker cashflow import transactions.csv
+
+# Configuration
+tracker cashflow config-show             # View config
+tracker cashflow config-set KEY VALUE    # Update setting
+```
+
 ## 🎯 Common Workflows
 
 ### Daily Entry (TUI)
@@ -194,6 +213,7 @@ tracker server --port 8080
 - TUI Guide: `docs/USER_GUIDE.md#interactive-tui-mode`
 - Chat Walkthrough: `docs/USER_GUIDE.md#chat-system`
 - Profile Guide: `docs/USER_GUIDE.md#profile-system`
+- Cash Flow Guide: `docs/CASHFLOW_GUIDE.md` (NEW!)
 - API Docs: `docs/API_DOCUMENTATION.md`
 - README: `README.md`
 
@@ -216,6 +236,9 @@ alias tn='tracker new'
 alias ts='tracker show today'
 alias tst='tracker stats'
 alias tl='tracker list'
+alias tcf='tracker cashflow'          # NEW!
+alias tcfw='tracker cashflow week'    # NEW!
+alias tcfm='tracker cashflow month'   # NEW!
 ```
 
 ## 🔐 Environment Variables

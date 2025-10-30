@@ -1,0 +1,334 @@
+"""Cash flow configuration management
+
+Manages provider registry and loop definitions in ~/.config/tracker/cashflow.toml
+"""
+
+import tomllib
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Optional
+
+from tracker.config import get_config_dir
+
+
+@dataclass
+class PayrollConfig:
+    """Payroll cadence configuration"""
+    payday_is_thursday: bool = True
+    week_start: str = "FRI"  # FRI-THU window by default
+    payday_weekly: str = "Thursday"  # Day of week for payday
+    net_pay: float = 1300.00  # Weekly net pay in USD
+
+
+@dataclass
+class RecurringItem:
+    """Recurring income or expense"""
+    name: str
+    amount: float
+    frequency: str  # 'weekly', 'biweekly', 'monthly'
+    provider: Optional[str] = None
+    reserve_then_clear: bool = False  # For Snap-On style bills
+    
+    
+@dataclass
+class RecurringConfig:
+    """Recurring bills and income"""
+    weekly: list[RecurringItem] = field(default_factory=list)
+    biweekly: list[RecurringItem] = field(default_factory=list)
+    monthly: list[RecurringItem] = field(default_factory=list)
+
+
+@dataclass
+class EssentialsConfig:
+    """Essential recurring expenses"""
+    gas_fill_cost: float = 55.00
+    gas_fill_frequency_days: int = 2
+    food_weekly: float = 125.00
+    pets_weekly: float = 60.00
+
+
+@dataclass
+class AccountsConfig:
+    """Account tracking"""
+    primary: str = "chase"
+
+
+@dataclass
+class ProviderConfig:
+    """Provider definition"""
+    type: str  # 'advance', 'auto_debit', 'checking', etc.
+    account: str
+    
+
+@dataclass
+class LoopInclude:
+    """Loop inclusion criteria"""
+    event_type: str
+    provider: Optional[str] = None
+
+
+@dataclass
+class LoopConfig:
+    """Loop definition for paired cash flow events"""
+    name: str
+    includes: list[LoopInclude]
+
+
+@dataclass
+class WeeklyBudgetDefaults:
+    """Default weekly budget amounts"""
+    gas_usd: float = 150.0
+    food_usd: float = 125.0
+    
+
+@dataclass
+class DefaultsConfig:
+    """Default values for various features"""
+    weekly_budget: WeeklyBudgetDefaults = field(default_factory=WeeklyBudgetDefaults)
+
+
+@dataclass
+class CashFlowConfig:
+    """Complete cash flow configuration"""
+    payroll: PayrollConfig = field(default_factory=PayrollConfig)
+    accounts: AccountsConfig = field(default_factory=AccountsConfig)
+    providers: dict[str, ProviderConfig] = field(default_factory=dict)
+    loops: list[LoopConfig] = field(default_factory=list)
+    recurring: RecurringConfig = field(default_factory=RecurringConfig)
+    essentials: EssentialsConfig = field(default_factory=EssentialsConfig)
+    defaults: DefaultsConfig = field(default_factory=DefaultsConfig)
+    
+    # Essential categories for analytics
+    essential_categories: set[str] = field(default_factory=lambda: {
+        'gas', 'food', 'rent', 'utilities', 'insurance', 'subscription', 'pets'
+    })
+
+
+def get_config_path() -> Path:
+    """Get the path to cashflow.toml"""
+    return get_config_dir() / "cashflow.toml"
+
+
+def get_default_config() -> CashFlowConfig:
+    """Get default configuration with examples"""
+    config = CashFlowConfig()
+    
+    # Add example providers
+    config.providers = {
+        "advance_app": ProviderConfig(type="advance", account="chase"),
+        "tool_truck": ProviderConfig(type="auto_debit", account="acorns_checking"),
+    }
+    
+    # Add example loops
+    config.loops = [
+        LoopConfig(
+            name="pay_advance_loop",
+            includes=[
+                LoopInclude(event_type="advance", provider="advance_app"),
+                LoopInclude(event_type="repayment", provider="advance_app"),
+            ]
+        ),
+        LoopConfig(
+            name="tool_truck_loop",
+            includes=[
+                LoopInclude(event_type="bill", provider="tool_truck"),
+            ]
+        ),
+    ]
+    
+    return config
+
+
+def write_default_config(path: Path) -> None:
+    """Write default configuration to TOML file"""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    
+    content = """# Tracker Cash Flow Configuration
+# This file defines providers, loops, and defaults for cash flow tracking
+
+[payroll]
+payday_is_thursday = true   # default cadence
+week_start = "FRI"          # derives Fri→Thu window by default
+
+[accounts]
+primary = "chase"
+
+# Providers are user-defined (no brand lock-in)
+[providers.advance_app]
+type = "advance"            # semantic type
+account = "chase"
+
+[providers.tool_truck]
+type = "auto_debit"
+account = "acorns_checking"
+
+# Loops define how paired events should be analyzed
+# A loop = set of event_types/providers that conceptually pair (borrow→repay, debit→income, etc.)
+[[loops]]
+name = "pay_advance_loop"
+includes = [
+  { event_type = "advance", provider = "advance_app" },
+  { event_type = "repayment", provider = "advance_app" }
+]
+
+[[loops]]
+name = "tool_truck_loop"
+includes = [
+  { event_type = "bill", provider = "tool_truck" }
+]
+
+[defaults.weekly_budget]
+gas_usd = 150.0
+food_usd = 125.0
+"""
+    
+    path.write_text(content)
+
+
+def load_config() -> CashFlowConfig:
+    """Load configuration from cashflow.toml, creating default if missing"""
+    config_path = get_config_path()
+    
+    if not config_path.exists():
+        write_default_config(config_path)
+    
+    with open(config_path, "rb") as f:
+        data = tomllib.load(f)
+    
+    # Parse payroll config
+    payroll_data = data.get("payroll", {})
+    payroll = PayrollConfig(
+        payday_is_thursday=payroll_data.get("payday_is_thursday", True),
+        week_start=payroll_data.get("week_start", "FRI"),
+    )
+    
+    # Parse accounts config
+    accounts_data = data.get("accounts", {})
+    accounts = AccountsConfig(
+        primary=accounts_data.get("primary", "chase"),
+    )
+    
+    # Parse providers
+    providers = {}
+    providers_data = data.get("providers", {})
+    for name, prov_data in providers_data.items():
+        providers[name] = ProviderConfig(
+            type=prov_data.get("type", "generic"),
+            account=prov_data.get("account", accounts.primary),
+        )
+    
+    # Parse loops
+    loops = []
+    loops_data = data.get("loops", [])
+    for loop_data in loops_data:
+        includes = []
+        for inc in loop_data.get("includes", []):
+            includes.append(LoopInclude(
+                event_type=inc["event_type"],
+                provider=inc.get("provider"),
+            ))
+        
+        loops.append(LoopConfig(
+            name=loop_data["name"],
+            includes=includes,
+        ))
+    
+    # Parse defaults
+    defaults_data = data.get("defaults", {})
+    budget_data = defaults_data.get("weekly_budget", {})
+    defaults = DefaultsConfig(
+        weekly_budget=WeeklyBudgetDefaults(
+            gas_usd=budget_data.get("gas_usd", 150.0),
+            food_usd=budget_data.get("food_usd", 125.0),
+        )
+    )
+    
+    return CashFlowConfig(
+        payroll=payroll,
+        accounts=accounts,
+        providers=providers,
+        loops=loops,
+        defaults=defaults,
+    )
+
+
+def set_config_value(key: str, value: Any) -> None:
+    """Set a configuration value (simple dotted key support)
+    
+    Examples:
+        set_config_value("payroll.payday_is_thursday", True)
+        set_config_value("defaults.weekly_budget.gas_usd", 175.0)
+    """
+    config_path = get_config_path()
+    
+    if not config_path.exists():
+        write_default_config(config_path)
+    
+    # Read current config
+    with open(config_path, "rb") as f:
+        data = tomllib.load(f)
+    
+    # Parse key path
+    keys = key.split(".")
+    current = data
+    
+    # Navigate to parent dict
+    for k in keys[:-1]:
+        if k not in current:
+            current[k] = {}
+        current = current[k]
+    
+    # Set value
+    current[keys[-1]] = value
+    
+    # Write back (simple approach - preserves data but loses comments)
+    # For production, consider using tomlkit for comment preservation
+    import json
+    import re
+    
+    lines = []
+    lines.append("# Tracker Cash Flow Configuration\n")
+    lines.append("# This file defines providers, loops, and defaults for cash flow tracking\n\n")
+    
+    # Write sections
+    if "payroll" in data:
+        lines.append("[payroll]\n")
+        for k, v in data["payroll"].items():
+            lines.append(f"{k} = {json.dumps(v)}\n")
+        lines.append("\n")
+    
+    if "accounts" in data:
+        lines.append("[accounts]\n")
+        for k, v in data["accounts"].items():
+            lines.append(f"{k} = {json.dumps(v)}\n")
+        lines.append("\n")
+    
+    if "providers" in data:
+        for prov_name, prov_data in data["providers"].items():
+            lines.append(f"[providers.{prov_name}]\n")
+            for k, v in prov_data.items():
+                lines.append(f"{k} = {json.dumps(v)}\n")
+            lines.append("\n")
+    
+    if "loops" in data:
+        for loop in data["loops"]:
+            lines.append("[[loops]]\n")
+            lines.append(f"name = {json.dumps(loop['name'])}\n")
+            lines.append("includes = [\n")
+            for inc in loop.get("includes", []):
+                inc_str = "  { "
+                inc_str += f"event_type = {json.dumps(inc['event_type'])}"
+                if "provider" in inc:
+                    inc_str += f", provider = {json.dumps(inc['provider'])}"
+                inc_str += " },\n"
+                lines.append(inc_str)
+            lines.append("]\n\n")
+    
+    if "defaults" in data:
+        if "weekly_budget" in data["defaults"]:
+            lines.append("[defaults.weekly_budget]\n")
+            for k, v in data["defaults"]["weekly_budget"].items():
+                lines.append(f"{k} = {v}\n")
+            lines.append("\n")
+    
+    config_path.write_text("".join(lines))

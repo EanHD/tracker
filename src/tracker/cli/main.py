@@ -90,6 +90,7 @@ def version():
 
 # Register commands
 from tracker.cli.commands.achievements import achievements
+from tracker.cli.commands.cashflow import cashflow
 from tracker.cli.commands.chat import chat
 from tracker.cli.commands.config import config
 from tracker.cli.commands.edit import edit
@@ -114,6 +115,7 @@ cli.add_command(search)
 cli.add_command(export)
 cli.add_command(stats)
 cli.add_command(achievements)
+cli.add_command(cashflow)
 cli.add_command(chat)
 cli.add_command(config)
 cli.add_command(onboard)

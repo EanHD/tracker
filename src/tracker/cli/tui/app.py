@@ -173,7 +173,7 @@ def handle_view_entries():
         
         # Ask if user wants to view details
         choice = Prompt.ask(
-            "Enter entry number to view details (or press Enter to go back)",
+            "Enter # for details, 'e' to edit, 'r' to remove, or Enter to go back",
             default="",
             console=console,
         )
@@ -187,7 +187,57 @@ def handle_view_entries():
                 console.print("[red]Invalid entry number[/red]")
                 console.print("\n[dim]Press Enter to continue...[/dim]")
                 input()
-        
+        elif choice.lower() == 'e':
+            # Edit mode
+            entry_num = Prompt.ask("Enter entry number to edit", default="")
+            if entry_num.isdigit():
+                idx = int(entry_num)
+                if 1 <= idx <= len(entries):
+                    selected_entry = entries[idx - 1]
+                    from tracker.cli.commands.edit import edit as edit_cmd
+                    try:
+                        edit_cmd.callback(
+                            entry_date=selected_entry.date,
+                            stress=None, income=None, bills=None, hours=None,
+                            side_income=None, food=None, gas=None, cash=None,
+                            bank=None, debts=None, notes=None, priority=None,
+                            regenerate_feedback=False
+                        )
+                    except KeyboardInterrupt:
+                        console.print("\n[yellow]Edit cancelled[/yellow]")
+                    except Exception as e:
+                        console.print(f"\n[red]Error: {e}[/red]")
+                    console.print("\n[dim]Press Enter to continue...[/dim]")
+                    input()
+                else:
+                    console.print("[red]Invalid entry number[/red]")
+                    console.print("\n[dim]Press Enter to continue...[/dim]")
+                    input()
+        elif choice.lower() == 'r':
+            # Remove mode
+            entry_num = Prompt.ask("Enter entry number to remove", default="")
+            if entry_num.isdigit():
+                idx = int(entry_num)
+                if 1 <= idx <= len(entries):
+                    selected_entry = entries[idx - 1]
+                    if Confirm.ask(f"Delete entry for {selected_entry.date}? This cannot be undone.", default=False):
+                        from tracker.core.database import SessionLocal
+                        db = SessionLocal()
+                        try:
+                            from tracker.services.entry_service import EntryService
+                            service = EntryService(db)
+                            service.delete_entry(selected_entry.id, user_id=1)
+                            console.print(f"\n[green]{icon('✓', 'Deleted')} Entry for {selected_entry.date} has been removed[/green]")
+                        except Exception as e:
+                            console.print(f"\n[red]Error deleting entry: {e}[/red]")
+                        finally:
+                            db.close()
+                    console.print("\n[dim]Press Enter to continue...[/dim]")
+                    input()
+                else:
+                    console.print("[red]Invalid entry number[/red]")
+                    console.print("\n[dim]Press Enter to continue...[/dim]")
+                    input()
 
 def show_entry_detail(entry):
     """Show detailed view of an entry"""
@@ -394,7 +444,7 @@ def handle_search():
         
         # Ask if user wants to view details
         choice = Prompt.ask(
-            "Enter entry number to view details (or press Enter to go back)",
+            "Enter # for details, 'e' to edit, 'r' to remove, or Enter to go back",
             default=""
         )
         
@@ -406,6 +456,57 @@ def handle_search():
                 console.print("[red]Invalid entry number[/red]")
                 console.print("\n[dim]Press Enter to continue...[/dim]")
                 input()
+        elif choice.lower() == 'e':
+            # Edit mode
+            entry_num = Prompt.ask("Enter entry number to edit", default="")
+            if entry_num.isdigit():
+                idx = int(entry_num)
+                if 1 <= idx <= len(entries):
+                    selected_entry = entries[idx - 1]
+                    from tracker.cli.commands.edit import edit as edit_cmd
+                    try:
+                        edit_cmd.callback(
+                            entry_date=selected_entry.date,
+                            stress=None, income=None, bills=None, hours=None,
+                            side_income=None, food=None, gas=None, cash=None,
+                            bank=None, debts=None, notes=None, priority=None,
+                            regenerate_feedback=False
+                        )
+                    except KeyboardInterrupt:
+                        console.print("\n[yellow]Edit cancelled[/yellow]")
+                    except Exception as e:
+                        console.print(f"\n[red]Error: {e}[/red]")
+                    console.print("\n[dim]Press Enter to continue...[/dim]")
+                    input()
+                else:
+                    console.print("[red]Invalid entry number[/red]")
+                    console.print("\n[dim]Press Enter to continue...[/dim]")
+                    input()
+        elif choice.lower() == 'r':
+            # Remove mode
+            entry_num = Prompt.ask("Enter entry number to remove", default="")
+            if entry_num.isdigit():
+                idx = int(entry_num)
+                if 1 <= idx <= len(entries):
+                    selected_entry = entries[idx - 1]
+                    if Confirm.ask(f"Delete entry for {selected_entry.date}? This cannot be undone.", default=False):
+                        from tracker.core.database import SessionLocal
+                        db = SessionLocal()
+                        try:
+                            from tracker.services.entry_service import EntryService
+                            service = EntryService(db)
+                            service.delete_entry(selected_entry.id, user_id=1)
+                            console.print(f"\n[green]{icon('✓', 'Deleted')} Entry for {selected_entry.date} has been removed[/green]")
+                        except Exception as e:
+                            console.print(f"\n[red]Error deleting entry: {e}[/red]")
+                        finally:
+                            db.close()
+                    console.print("\n[dim]Press Enter to continue...[/dim]")
+                    input()
+                else:
+                    console.print("[red]Invalid entry number[/red]")
+                    console.print("\n[dim]Press Enter to continue...[/dim]")
+                    input()
 
 
 def handle_stats():

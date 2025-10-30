@@ -61,7 +61,7 @@ def onboard(reset):
     console.print(
         "\n"
         + Panel.fit(
-            f"[bold cyan]{icon('🤖', 'AI')} Step 2/6: Provider Setup[/bold cyan]",
+            f"[bold cyan]{icon('💭', 'Tracker')} Step 2/6: Provider Setup[/bold cyan]",
             border_style="cyan",
         )
     )

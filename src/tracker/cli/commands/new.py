@@ -96,6 +96,7 @@ def _trigger_onboarding():
 @click.command()
 @click.option("--quick", is_flag=True, help="Quick mode with fewer prompts")
 @click.option("--no-feedback", is_flag=True, help="Skip feedback generation")
+@click.option("--yes", is_flag=True, help="Skip confirmation and save directly")
 @click.option("--date", type=click.DateTime(formats=["%Y-%m-%d"]), help="Entry date (YYYY-MM-DD)")
 @click.option("--cash", type=float, help="Cash on hand")
 @click.option("--bank", type=float, help="Bank balance")
@@ -109,7 +110,7 @@ def _trigger_onboarding():
 @click.option("--stress", type=int, help="Stress level (1-10)")
 @click.option("--priority", type=str, help="Today's priority")
 @click.option("--notes", type=str, help="Journal entry for the day")
-def new(quick, no_feedback, **kwargs):
+def new(quick, no_feedback, yes, **kwargs):
     """Create a new daily entry"""
     
     # Check if onboarding is needed (first time use)
@@ -136,19 +137,24 @@ def new(quick, no_feedback, **kwargs):
     
     if not entry_data:
         return
-    
+
+    # If --yes flag is used, skip confirmation and save directly
+    if yes:
+        _save_entry(entry_data, no_feedback)
+        return
+
     # Review and edit loop
     while True:
         # Show preview
         display_entry_preview(entry_data)
-        
+
         console.print("\n[bold]What would you like to do?[/bold]")
         console.print(f"[1] {icon('💾', 'Save')} Save this entry")
         console.print(f"[2] {icon('✏️', 'Edit')} Edit a field")
         console.print(f"[3] {icon('❌', 'Cancel')} Cancel")
-        
+
         choice = click.prompt("Choose", type=click.Choice(['1', '2', '3']), default='1')
-        
+
         if choice == '1':
             # Save entry
             _save_entry(entry_data, no_feedback)
@@ -177,13 +183,13 @@ def _create_from_flags(kwargs) -> dict:
         'date': kwargs['date'].date() if kwargs['date'] else date.today(),
         'cash_on_hand': Decimal(str(kwargs['cash'])) if kwargs.get('cash') is not None else None,
         'bank_balance': Decimal(str(kwargs['bank'])) if kwargs.get('bank') is not None else None,
-        'income_today': Decimal(str(kwargs.get('income', 0))),
-        'bills_due_today': Decimal(str(kwargs.get('bills', 0))),
+        'income_today': Decimal(str(kwargs.get('income') or 0)),
+        'bills_due_today': Decimal(str(kwargs.get('bills') or 0)),
         'debts_total': Decimal(str(kwargs['debt'])) if kwargs.get('debt') is not None else None,
-        'hours_worked': Decimal(str(kwargs.get('hours', 0))),
-        'side_income': Decimal(str(kwargs.get('side', 0))),
-        'food_spent': Decimal(str(kwargs.get('food', 0))),
-        'gas_spent': Decimal(str(kwargs.get('gas', 0))),
+        'hours_worked': Decimal(str(kwargs.get('hours') or 0)),
+        'side_income': Decimal(str(kwargs.get('side') or 0)),
+        'food_spent': Decimal(str(kwargs.get('food') or 0)),
+        'gas_spent': Decimal(str(kwargs.get('gas') or 0)),
         'stress_level': kwargs['stress'],
         'priority': kwargs.get('priority'),
         'notes': kwargs.get('notes'),
@@ -410,7 +416,7 @@ def _generate_feedback_if_configured(db, entry):
         feedback_service = FeedbackService(db)
         
         # Show progress
-        with FeedbackProgress(f"{icon('🤖', 'AI')} Generating feedback..."):
+        with FeedbackProgress(f"{icon('💭', 'Tracker')} Generating feedback..."):
             feedback = feedback_service.generate_feedback(entry.id, regenerate=False)
         
         # Display feedback

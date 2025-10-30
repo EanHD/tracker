@@ -188,7 +188,7 @@ def display_entry(entry, show_feedback: bool = False):
 
 
 def display_feedback(feedback):
-    """Display AI feedback with Markdown rendering"""
+    """Display Tracker feedback with Markdown rendering"""
     from rich.markdown import Markdown
     
     console = get_console()
@@ -196,7 +196,7 @@ def display_feedback(feedback):
     if feedback.status == "pending":
         console.print(
             emphasize(
-                f"\n[yellow]{icon('⏳', 'Pending')} AI feedback is being generated...[/yellow]",
+                f"\n[yellow]{icon('⏳', 'Pending')} Tracker feedback is being generated...[/yellow]",
                 "feedback pending",
             )
         )
@@ -205,7 +205,7 @@ def display_feedback(feedback):
     if feedback.status == "failed":
         console.print(
             emphasize(
-                f"\n[red]{icon('❌', 'Error')} AI feedback generation failed: {feedback.error_message}[/red]",
+                f"\n[red]{icon('❌', 'Error')} Tracker feedback generation failed: {feedback.error_message}[/red]",
                 "feedback error",
             )
         )

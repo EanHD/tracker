@@ -15,7 +15,8 @@
 6. [Chat System](#chat-system)
 7. [Profile System](#profile-system)
 8. [Philosophy Engine](#philosophy-engine)
-9. [Troubleshooting](#troubleshooting)
+9. [Cash Flow Loop Tracking](#cash-flow-loop-tracking)
+10. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -694,14 +695,272 @@ The profile keeps Tracker's coaching personal and consistent across feedback, ch
 
 ## Philosophy Engine
 
-Tracker’s Philosophy Engine gives the AI a mentor-like voice grounded in practical financial wisdom.
+For complete documentation on the Philosophy Engine including all 19 principles, communication patterns, and advanced usage, see the **Philosophy Implementation Guide** at:
 
-- **Categories (7)**: Financial Discipline, Wealth Mindset, Habit Building, Emotional Intelligence, Balance & Health, Behavioral Economics, and Mindset & Growth. Each category bundles proven principles from leaders like Dave Ramsey and Robert Kiyosaki.
-- **Life Phases (4)**: Debt Payoff, Stability, Growth, and Legacy. The engine detects your current phase from recent entries (e.g., debt levels, savings progress) and prioritizes the most relevant principles.
-- **Communication Tones (7)**: Encouraging, Honest, Analytical, Friendly, Firm, Compassionate, Motivational. Tones shift automatically based on stress, energy, and progress streaks.
-- **Context Pipeline**: The profile service and recent entry summary feed the Philosophy Context Service, which selects matching principles and tone. The feedback service then blends them into AI prompts so responses feel empathetic, actionable, and phase-appropriate.
+`docs/philosophy_guide.md`
 
-You do not need to configure anything manually—stay consistent with logging entries and keeping your profile current, and the philosophy engine adapts behind the scenes.
+**Quick links:**
+- Principle Reference: Lists all 19 principles with examples
+- Life Phase Detection: How the AI adapts to your journey
+- Pattern Analysis: How patterns trigger relevant wisdom
+- Tone Calibration: How the AI adjusts its communication style
+
+---
+
+## Cash Flow Loop Tracking
+
+**NEW!** Track repeating money cycles like payday advances, buy-now-pay-later, auto-debits, and more.
+
+### What Are Cash Flow Loops?
+
+Loops are recurring money patterns that affect your finances:
+- **Payday Advances** - Get money now, repay on payday
+- **Buy Now Pay Later (BNPL)** - Split purchases into payments
+- **Auto-Debits** - Tool trucks, subscriptions, recurring bills
+- **Family Loans** - IOUs and informal arrangements
+
+The system is **provider-agnostic** - you define YOUR providers, no brand names hardcoded.
+
+### Quick Start
+
+```bash
+# 1. View default configuration
+tracker cashflow config-show
+
+# 2. Record events
+tracker cashflow add-event --type income --amount -1200 --memo "Paycheck"
+tracker cashflow add-event --type spend --category gas --amount 45.50
+tracker cashflow add-event --type advance --provider my_app --amount -200
+
+# 3. View weekly summary
+tracker cashflow week
+```
+
+### Key Commands
+
+#### Record Events
+
+```bash
+# Basic spending
+tracker cashflow add-event \
+  --type spend \
+  --category food \
+  --amount 85 \
+  --account chase \
+  --memo "Groceries"
+
+# Income (negative = inflow)
+tracker cashflow add-event \
+  --type income \
+  --amount -1200 \
+  --date 2025-10-23
+
+# Advance from a loop
+tracker cashflow add-event \
+  --type advance \
+  --provider my_advance_app \
+  --amount -200 \
+  --account checking
+
+# Repayment
+tracker cashflow add-event \
+  --type repayment \
+  --provider my_advance_app \
+  --amount 50
+```
+
+#### View Summaries
+
+```bash
+# Weekly summary (current week)
+tracker cashflow week
+
+# Specific week
+tracker cashflow week --end 2025-10-30
+
+# Monthly report
+tracker cashflow month --month 2025-10
+```
+
+#### Import Data
+
+```bash
+# Bulk import from CSV
+tracker cashflow import transactions.csv
+```
+
+CSV format:
+```csv
+date,type,provider,category,amount,account,memo
+2025-10-20,spend,,gas,45.50,chase,Shell
+2025-10-21,income,,,,-1200,chase,Paycheck
+2025-10-22,advance,my_app,,-200,chase,Emergency
+```
+
+### Understanding Output
+
+The weekly summary shows:
+
+1. **Income Total** - All money coming in
+2. **Essentials Breakdown** - Spending on gas, food, rent, etc.
+3. **Loop Summaries** - Per-loop analysis with:
+   - Inflows (money received from loop)
+   - Outflows (money paid to loop)
+   - Net impact
+   - Week-over-week change
+4. **Cash Analysis**:
+   - **With loops**: Your actual cash including advances
+   - **Without loops**: What you'd have without borrowing
+   - **Loop strain**: The difference (how much you're relying on loops)
+
+### Example Output
+
+```
+📊 Week Summary: 2025-10-24 → 2025-10-30
+(Thu payroll cadence)
+
+Income: $1,000.00
+
+Essentials:
+  Gas          $45.50
+  Food         $85.00
+
+Loops:
+  advance_cycle:
+    +$200.00 inflow / -$50.00 outflow → net -$150.00
+    (↓ $100.00 vs last week)  ← Usage decreasing!
+
+Net Change This Week:
+  With loops:    $719.50
+  Without loops: $869.50
+  Loop strain:   $150.00   ← You're relying on $150 from the advance
+```
+
+### Configuration
+
+Configuration is at `~/.config/tracker/cashflow.toml`.
+
+**View current config:**
+```bash
+tracker cashflow config-show
+```
+
+**Update settings:**
+```bash
+# Change payroll cadence
+tracker cashflow config-set payroll.payday_is_thursday false
+tracker cashflow config-set payroll.week_start "MON"
+
+# Update budget defaults
+tracker cashflow config-set defaults.weekly_budget.gas_usd 175.0
+```
+
+**Manual editing** (for providers and loops):
+
+Edit `~/.config/tracker/cashflow.toml`:
+
+```toml
+[payroll]
+payday_is_thursday = true
+week_start = "FRI"
+
+[accounts]
+primary = "checking"
+
+# Define your providers
+[providers.my_advance_app]
+type = "advance"
+account = "checking"
+
+[providers.affirm]
+type = "bnpl"
+account = "credit_card"
+
+# Define loops
+[[loops]]
+name = "advance_cycle"
+includes = [
+  { event_type = "advance", provider = "my_advance_app" },
+  { event_type = "repayment", provider = "my_advance_app" },
+  { event_type = "fee", provider = "my_advance_app" }
+]
+
+[[loops]]
+name = "bnpl_payments"
+includes = [
+  { event_type = "repayment", provider = "affirm" }
+]
+
+[defaults.weekly_budget]
+gas_usd = 150.0
+food_usd = 125.0
+```
+
+### Sign Convention
+
+**Important:** Amounts follow a consistent convention:
+- **Positive** = Outflow/Expense (money leaving your account)
+  - Examples: $50 for gas, $400 tool payment, $150 loan repayment
+- **Negative** = Inflow/Income (money entering your account)
+  - Examples: -$1200 paycheck, -$200 advance, -$50 refund
+
+This makes net calculations intuitive:
+```
+Net change = -Inflows + Outflows
+```
+
+### Monthly Reports
+
+Monthly reports provide extended analysis:
+
+```bash
+tracker cashflow month --month 2025-10
+```
+
+Output includes:
+- Loop overview (weeks used, totals, strain)
+- Streak tracking (current and best streaks without each loop)
+- Top spending categories
+- Actionable recommendations
+
+Example:
+```
+📊 October 2025 Report
+
+Loop Overview:
+  advance_cycle: 3 weeks used
+    $600.00 inflow / $400.00 outflow
+    Strain: -$200.00
+    Current streak: 1 weeks without
+    Best streak: 2 weeks
+
+Top Categories:
+  Food            $350.00
+  Gas             $180.00
+  Rent            $1,200.00
+
+Recommendations:
+  → Reduce advance_cycle usage by $100.00 next month
+```
+
+### Tips for Success
+
+1. **Record everything** - More data = better insights
+2. **Use consistent providers** - Stick to same names in config
+3. **Review weekly** - Run `tracker cashflow week` every Friday
+4. **Track trends** - Use monthly reports to see long-term patterns
+5. **No judgment** - This tool shows reality so you can make informed decisions
+
+### Complete Documentation
+
+For comprehensive documentation including:
+- Detailed use cases
+- Advanced configuration
+- Troubleshooting
+- CSV import guide
+- Analytics explained
+
+See: **`docs/CASHFLOW_GUIDE.md`**
 
 ---
 

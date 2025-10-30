@@ -1,9 +1,19 @@
 [project]
 name = "tracker"
-version = "0.1.0"
-description = "Daily financial logging app with AI motivational feedback"
+version = "1.0.0"
+description = "Professional daily financial logging app with natural language commands and AI feedback"
 authors = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "Tracker Team", email = "tracker@example.com"}
+]
+keywords = ["finance", "cli", "ai", "productivity", "budgeting"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Office/Business :: Financial",
 ]
 readme = "README.md"
 requires-python = ">=3.11"

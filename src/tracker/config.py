@@ -7,23 +7,17 @@ from typing import Optional
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from tracker.core.paths import TrackerPaths
+
 
 def get_config_dir() -> Path:
     """Get the config directory path"""
-    config_dir = Path.home() / ".config" / "tracker"
-    config_dir.mkdir(parents=True, exist_ok=True)
-    return config_dir
+    return TrackerPaths.get_config_dir()
 
 
 def get_env_file_path() -> Path:
     """Get the .env file path"""
-    # Check if .env exists in current directory (for development)
-    local_env = Path(".env")
-    if local_env.exists() and local_env.is_file():
-        return local_env
-    
-    # Otherwise use config directory
-    return get_config_dir() / ".env"
+    return TrackerPaths.get_env_file_path()
 
 
 class Settings(BaseSettings):
@@ -37,8 +31,8 @@ class Settings(BaseSettings):
     )
 
     # Database
-    database_url: str = Field(
-        default="sqlite:///~/.config/tracker/tracker.db",
+    database_url: Optional[str] = Field(
+        default=None,
         description="Database connection URL",
     )
     encryption_key: Optional[str] = Field(
@@ -76,8 +70,13 @@ class Settings(BaseSettings):
 
     def get_database_path(self) -> Path:
         """Get resolved database path"""
-        url = self.database_url.replace("sqlite:///", "")
-        return Path(os.path.expanduser(url))
+        if self.database_url and self.database_url.startswith("sqlite:///"):
+            # Use provided path
+            url = self.database_url.replace("sqlite:///", "")
+            return Path(os.path.expanduser(url))
+        else:
+            # Use default cross-platform path
+            return TrackerPaths.get_database_path()
 
     def get_ai_api_key(self) -> Optional[str]:
         """Get API key for configured provider"""

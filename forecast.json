@@ -1,0 +1,187 @@
+
+🔮 7-Day Forecast
+Period: 2025-10-31 → 2025-11-06
+Thursday payday cadence
+
+{
+  "period": {
+    "start": "2025-10-31",
+    "end": "2025-11-06"
+  },
+  "starting_balances": {
+    "bank": "194.48",
+    "cash": "11"
+  },
+  "ending_balances": {
+    "bank": "-30.51999999999999999999999986",
+    "cash": "11"
+  },
+  "daily_forecast": [
+    {
+      "date": "2025-10-31",
+      "day_name": "Friday",
+      "events": [
+        {
+          "type": "bill",
+          "description": "SnapOn Cleared",
+          "amount": "0.00",
+          "balance_after": "194.48",
+          "note": "Already reserved Thu"
+        },
+        {
+          "type": "essential",
+          "description": "Gas Fill",
+          "amount": "55.0",
+          "balance_after": "139.48"
+        },
+        {
+          "type": "essential",
+          "description": "Food (daily avg)",
+          "amount": "17.85714285714285714285714286",
+          "balance_after": "121.6228571428571428571428571"
+        }
+      ],
+      "day_total": "72.85714285714285714285714286",
+      "end_balance_bank": "121.6228571428571428571428571",
+      "end_balance_cash": "11"
+    },
+    {
+      "date": "2025-11-01",
+      "day_name": "Saturday",
+      "events": [
+        {
+          "type": "essential",
+          "description": "Food (daily avg)",
+          "amount": "17.85714285714285714285714286",
+          "balance_after": "103.7657142857142857142857142"
+        }
+      ],
+      "day_total": "17.85714285714285714285714286",
+      "end_balance_bank": "103.7657142857142857142857142",
+      "end_balance_cash": "11"
+    },
+    {
+      "date": "2025-11-02",
+      "day_name": "Sunday",
+      "events": [
+        {
+          "type": "essential",
+          "description": "Gas Fill",
+          "amount": "55.0",
+          "balance_after": "48.7657142857142857142857142"
+        },
+        {
+          "type": "essential",
+          "description": "Food (daily avg)",
+          "amount": "17.85714285714285714285714286",
+          "balance_after": "30.90857142857142857142857134"
+        }
+      ],
+      "day_total": "72.85714285714285714285714286",
+      "end_balance_bank": "30.90857142857142857142857134",
+      "end_balance_cash": "11"
+    },
+    {
+      "date": "2025-11-03",
+      "day_name": "Monday",
+      "events": [
+        {
+          "type": "essential",
+          "description": "Food (daily avg)",
+          "amount": "17.85714285714285714285714286",
+          "balance_after": "13.05142857142857142857142848"
+        }
+      ],
+      "day_total": "17.85714285714285714285714286",
+      "end_balance_bank": "13.05142857142857142857142848",
+      "end_balance_cash": "11"
+    },
+    {
+      "date": "2025-11-04",
+      "day_name": "Tuesday",
+      "events": [
+        {
+          "type": "essential",
+          "description": "Gas Fill",
+          "amount": "55.0",
+          "balance_after": "-41.94857142857142857142857152"
+        },
+        {
+          "type": "essential",
+          "description": "Food (daily avg)",
+          "amount": "17.85714285714285714285714286",
+          "balance_after": "-59.80571428571428571428571438"
+        }
+      ],
+      "day_total": "72.85714285714285714285714286",
+      "end_balance_bank": "-59.80571428571428571428571438",
+      "end_balance_cash": "11"
+    },
+    {
+      "date": "2025-11-05",
+      "day_name": "Wednesday",
+      "events": [
+        {
+          "type": "essential",
+          "description": "Food (daily avg)",
+          "amount": "17.85714285714285714285714286",
+          "balance_after": "-77.66285714285714285714285724"
+        }
+      ],
+      "day_total": "17.85714285714285714285714286",
+      "end_balance_bank": "-77.66285714285714285714285724",
+      "end_balance_cash": "11"
+    },
+    {
+      "date": "2025-11-06",
+      "day_name": "Thursday",
+      "events": [
+        {
+          "type": "income",
+          "description": "Paycheck",
+          "amount": "-1300.0",
+          "balance_after": "1222.337142857142857142857143"
+        },
+        {
+          "type": "bill",
+          "description": "EarnIn",
+          "amount": "600.0",
+          "balance_after": "622.337142857142857142857143"
+        },
+        {
+          "type": "transfer",
+          "description": "SnapOn Reserved (\u2192 Acorns)",
+          "amount": "400.0",
+          "balance_after": "222.337142857142857142857143",
+          "note": "Reserved, clears Friday"
+        },
+        {
+          "type": "bill",
+          "description": "ChaseTransfer",
+          "amount": "180.0",
+          "balance_after": "42.337142857142857142857143"
+        },
+        {
+          "type": "essential",
+          "description": "Gas Fill",
+          "amount": "55.0",
+          "balance_after": "-12.662857142857142857142857"
+        },
+        {
+          "type": "essential",
+          "description": "Food (daily avg)",
+          "amount": "17.85714285714285714285714286",
+          "balance_after": "-30.51999999999999999999999986"
+        }
+      ],
+      "day_total": "-47.14285714285714285714285714",
+      "end_balance_bank": "-30.51999999999999999999999986",
+      "end_balance_cash": "11"
+    }
+  ],
+  "summary": {
+    "total_income": "1300.0",
+    "total_expenses": "225.0000000000000000000000002",
+    "net_change": "1075.000000000000000000000000"
+  }
+}

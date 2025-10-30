@@ -172,49 +172,52 @@ def prompt_text(
 def _prompt_multiline_text(message: str, default: Optional[str] = None) -> Optional[str]:
     """
     Custom multiline text input that handles "Enter twice to finish" behavior.
-    
+
     Args:
         message: The prompt message
         default: Default text to show
-        
+
     Returns:
         The multiline text input, or None if empty
     """
     console = get_console()
-    
+
     # Show the prompt message
     console.print(f"[green]{message}[/green]")
-    
+    console.print("[dim]Press Enter twice on empty lines to finish[/dim]")
+
     lines = []
-    empty_line_count = 0
-    
-    while True:
-        try:
-            # Get user input
-            line = input()
-            
-            # Check for empty line (Enter twice to finish)
-            if line.strip() == "":
-                empty_line_count += 1
-                if empty_line_count >= 2:
-                    # Two consecutive empty lines - end input
+    consecutive_empty = 0
+
+    try:
+        while True:
+            # Use prompt_toolkit for each line
+            line = prompt("", multiline=False).strip()
+
+            if not line:
+                consecutive_empty += 1
+                if consecutive_empty >= 2:
+                    # Two consecutive empty lines - finish input
                     break
-                else:
-                    # First empty line - add it to the text but continue
-                    lines.append("")
             else:
-                # Reset empty line counter when we get non-empty input
-                empty_line_count = 0
-                lines.append(line)
-                
-        except KeyboardInterrupt:
-            raise  # Allow cancellation
-        except EOFError:
-            break  # End of input (Ctrl+D)
-    
-    # Join lines and clean up
-    result = "\n".join(lines).strip()
-    return result if result else None
+                consecutive_empty = 0
+
+            lines.append(line)
+
+        # Join lines with newlines, but filter out the empty lines at the end
+        # (the last two empty lines are just for finishing)
+        while lines and not lines[-1]:
+            lines.pop()
+
+        result = "\n".join(lines).strip()
+        return result if result else None
+
+    except KeyboardInterrupt:
+        raise  # Allow cancellation
+    except Exception as e:
+        get_console().print(f"[red]Error: {e}[/red]")
+        get_console().print("[yellow]Please try again (or press Ctrl+C to cancel)[/yellow]")
+        return None
 
 
 def prompt_date(

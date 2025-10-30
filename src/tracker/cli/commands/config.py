@@ -204,7 +204,7 @@ def setup():
     
     # Provider
     console.print(
-        f"[bold cyan]{icon('🤖', 'AI')} Provider Configuration[/bold cyan]"
+        f"[bold cyan]{icon('💭', 'Tracker')} Provider Configuration[/bold cyan]"
     )
     
     # Check for existing backups

@@ -63,7 +63,7 @@ def handle_new_entry():
         # Call the Click command's callback function directly
         # This bypasses Click's context/argument parsing and runs the actual logic
         # Works perfectly with interactive prompts since we're in the same process
-        new_cmd.callback(quick=False, no_feedback=False)
+        new_cmd.callback(quick=False, no_feedback=False, yes=False, date=None, cash=None, bank=None, income=None, bills=None, debt=None, hours=None, side=None, food=None, gas=None, stress=None, priority=None, notes=None)
         
     except KeyboardInterrupt:
         console.print("\n[yellow]Entry creation cancelled[/yellow]")

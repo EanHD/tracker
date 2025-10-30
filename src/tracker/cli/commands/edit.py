@@ -82,7 +82,11 @@ def edit(
         console = get_console()
         # Parse date
         if entry_date:
-            target_date = entry_date.date()
+            # Handle both datetime and date objects
+            if isinstance(entry_date, datetime):
+                target_date = entry_date.date()
+            else:
+                target_date = entry_date
         else:
             target_date = date.today()
         

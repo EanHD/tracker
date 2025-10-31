@@ -397,6 +397,7 @@ def _generate_feedback_if_configured(db, entry):
     from tracker.services.feedback_service import FeedbackService
     from tracker.cli.ui.progress import FeedbackProgress
     from tracker.cli.ui.display import display_feedback
+    from rich.prompt import Confirm
     console = get_console()
     
     # Check if AI is configured (not needed for local provider)
@@ -422,6 +423,25 @@ def _generate_feedback_if_configured(db, entry):
         # Display feedback
         console.print()
         display_feedback(feedback)
+        
+        # Offer to continue conversation about this entry
+        console.print()
+        if Confirm.ask(f"{icon('💬', '')} Continue conversation about this entry?", default=False):
+            from tracker.services.chat import ChatService
+            chat_service = ChatService(db, user_id=1)
+            
+            # Get or create chat for this entry
+            chat_obj = chat_service.get_or_create_entry_chat(entry.id)
+            
+            # Import and call the chat loop from TUI
+            from tracker.cli.tui.app import _chat_loop_native
+            console.print(f"\n[bold cyan]{icon('💬', '')} {chat_obj.title}[/bold cyan]")
+            if chat_obj.messages:
+                console.print(f"[dim]Continuing conversation ({len(chat_obj.messages)} messages)[/dim]\n")
+            else:
+                console.print(f"[dim]Starting new conversation about this entry[/dim]\n")
+            
+            _chat_loop_native(console, chat_service, chat_obj.id)
         
     except Exception as e:
         console.print(
